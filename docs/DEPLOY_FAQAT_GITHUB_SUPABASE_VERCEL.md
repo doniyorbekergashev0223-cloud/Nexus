@@ -144,7 +144,12 @@ Sozlamalarda avatar va loyiha yuborishda fayl yuklash ishlashi uchun ikkita buck
 2. **avatars** — nom: `avatars`, **Public bucket** belgilang → Create.
 3. Yana **New bucket** → **project-files** — nom: `project-files`, **Public bucket** → Create.
 
-(Policy: default "Allow public read" yoki "Allow authenticated upload" — kod `supabase.storage.from('avatars').upload` va `from('project-files').upload` ishlatadi; authenticated foydalanuvchilar yuklaydi.)
+**Muhim:**  
+- Bucket **Public** bo‘lishi kerak — aks holda avatar yoki loyiha fayli yuklanganda 400 xatosi chiqadi.  
+- Yuklash ishlashi uchun **Storage → Policies** da har ikkala bucket uchun ruxsat qo‘shing:  
+  - **avatars**: "New policy" → "For full customization" → Policy name: `Upload avatars`, Allowed operation: **INSERT**, Target roles: `authenticated`, USING expression: `true`, WITH CHECK: `true` → Save.  
+  - **project-files**: xuddi shunday "New policy" → INSERT, `authenticated`, USING/WITH CHECK: `true` → Save.  
+Agar 400 yoki "new row violates row-level security" chiqsa, bucket nomi aniq `avatars` va `project-files` ekanini va ikkala bucket **Public** ekanini tekshiring.
 
 **Agar jadvallar allaqachon yaratilgan bo‘lsa**, faqat yangi ustunlar qo‘shish uchun SQL Editor da:
 

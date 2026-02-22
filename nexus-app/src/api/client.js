@@ -100,7 +100,7 @@ const apiSupabase = {
   async uploadAvatar(userId, file) {
     const ext = (file.name || '').split('.').pop() || 'jpg';
     const path = `${userId}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type || 'image/jpeg' });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from('avatars').getPublicUrl(path);
     return data.publicUrl;
@@ -108,7 +108,8 @@ const apiSupabase = {
   async uploadProjectFile(userId, file) {
     const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
     const path = `${userId}/${Date.now()}_${safeName}`;
-    const { error } = await supabase.storage.from('project-files').upload(path, file, { upsert: false });
+    const contentType = file.type || 'application/octet-stream';
+    const { error } = await supabase.storage.from('project-files').upload(path, file, { upsert: false, contentType });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from('project-files').getPublicUrl(path);
     return data.publicUrl;

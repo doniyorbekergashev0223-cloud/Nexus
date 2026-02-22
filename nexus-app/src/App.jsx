@@ -457,15 +457,29 @@ export default function App() {
         return;
       }
       const meta = user.user_metadata || {};
+      let pending = null;
+      try {
+        const raw = sessionStorage.getItem('nexus_oauth_pending_profile');
+        if (raw) {
+          pending = JSON.parse(raw);
+          sessionStorage.removeItem('nexus_oauth_pending_profile');
+        }
+      } catch (_) {}
+      const role = pending?.role || 'student';
+      const region = pending?.region || 'Toshkent';
+      const school = pending?.school || meta.school || '';
+      const orgId = role === 'student' ? 'ORG-SCH-007' : role === 'organization' ? 'ORG-ITP-001' : 'ORG-GOV-000';
+      const orgName = role === 'student' ? school : role === 'organization' ? school : 'Davlat Nazorati';
+      const plan = role === 'student' ? 'free' : role === 'organization' ? 'pro' : 'enterprise';
       const defaultProfile = {
         id: user.id,
         full_name: meta.full_name || meta.name || user.email || '',
-        role: 'student',
-        region: 'Toshkent',
-        org_id: 'ORG-SCH-007',
-        org_name: meta.school || '',
-        plan: 'free',
-        school: meta.school || null,
+        role,
+        region,
+        org_id: orgId,
+        org_name: orgName,
+        plan,
+        school: school || null,
       };
       api.createProfile(defaultProfile).then(() => {
         api.getProfile(user.id).then((p) => {
@@ -791,6 +805,15 @@ function LandingPage({ onLoginSuccess, showToast }) {
     }
 
     if (isGoogle && supabase) {
+      if (authMode === 'register') {
+        try {
+          sessionStorage.setItem('nexus_oauth_pending_profile', JSON.stringify({
+            role: authForm.role,
+            region: authForm.region || 'Toshkent',
+            school: authForm.school || '',
+          }));
+        } catch (_) {}
+      }
       const redirectTo = `${window.location.origin}${window.location.pathname || ''}`;
       supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
         .then(({ error }) => {
@@ -1643,9 +1666,12 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
       avatarUrl: currentUser.avatarUrl || null,
     });
   }, [currentUser.id, currentUser.name, currentUser.email, currentUser.avatarUrl]);
+  useEffect(() => { setAvatarImgError(false); }, [avatarDisplayUrl]);
 
   const initials = (formData.name || 'U').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
   const avatarDisplayUrl = formData.avatarUrl || currentUser.avatarUrl;
+  const [avatarImgError, setAvatarImgError] = useState(false);
+  const showAvatarImg = avatarDisplayUrl && !avatarImgError;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -1656,8 +1682,15 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
     if (!supabase || !currentUser?.id) return;
     setUploading(true);
     try {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Rasm 5 MB dan oshmasin", "warning");
+        setUploading(false);
+        e.target.value = '';
+        return;
+      }
       const url = await api.uploadAvatar(currentUser.id, file);
       setFormData(prev => ({ ...prev, avatarUrl: url }));
+      setAvatarImgError(false);
       showToast("Rasm yuklandi. Saqlash tugmasini bosing.", "success");
     } catch (err) {
       showToast(err.message || "Rasm yuklanmadi", "error");
@@ -1695,8 +1728,8 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] flex-shrink-0 overflow-hidden">
-                   {avatarDisplayUrl ? (
-                     <img src={avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                   {showAvatarImg ? (
+                     <img src={avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" onError={() => setAvatarImgError(true)} />
                    ) : (
                      <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-xl md:text-2xl font-black text-white">{initials}</div>
                    )}
