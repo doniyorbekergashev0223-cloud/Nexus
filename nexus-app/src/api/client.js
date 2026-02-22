@@ -18,6 +18,14 @@ async function request(path, options = {}) {
   return data;
 }
 
+/** Supabase public bucket URL da /object/public/ bo‘lishini ta’minlaydi (404 oldini olish). */
+function ensurePublicStorageUrl(url, bucketName) {
+  if (!url || typeof url !== 'string') return url;
+  const wrong = `/object/${bucketName}/`;
+  const right = `/object/public/${bucketName}/`;
+  return url.includes(right) ? url : url.replace(wrong, right);
+}
+
 function projectFromRow(r) {
   if (!r) return null;
   return {
@@ -103,7 +111,7 @@ const apiSupabase = {
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type || 'image/jpeg' });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-    return data.publicUrl;
+    return ensurePublicStorageUrl(data.publicUrl, 'avatars');
   },
   async uploadProjectFile(userId, file) {
     const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -112,7 +120,7 @@ const apiSupabase = {
     const { error } = await supabase.storage.from('project-files').upload(path, file, { upsert: false, contentType });
     if (error) throw new Error(error.message);
     const { data } = supabase.storage.from('project-files').getPublicUrl(path);
-    return data.publicUrl;
+    return ensurePublicStorageUrl(data.publicUrl, 'project-files');
   },
   async getProjects({ role, orgId } = {}) {
     let q = supabase.from('projects').select('*').order('created_at', { ascending: false });
@@ -289,5 +297,5 @@ const apiFetch = {
 
 const api = supabase ? apiSupabase : apiFetch;
 
-export { apiSupabase, apiFetch };
+export { apiSupabase, apiFetch, ensurePublicStorageUrl };
 export default api;

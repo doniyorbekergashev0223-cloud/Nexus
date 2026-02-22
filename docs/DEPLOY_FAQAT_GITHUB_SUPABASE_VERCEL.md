@@ -151,6 +151,12 @@ Sozlamalarda avatar va loyiha yuborishda fayl yuklash ishlashi uchun ikkita buck
   - **project-files**: xuddi shunday "New policy" → INSERT, `authenticated`, USING/WITH CHECK: `true` → Save.  
 Agar 400 yoki "new row violates row-level security" chiqsa, bucket nomi aniq `avatars` va `project-files` ekanini va ikkala bucket **Public** ekanini tekshiring.
 
+**Avatar rasm 400 (yuklandi, lekin ko‘rinmayapti):**  
+1. **Storage** → **avatars** bucketini oching.  
+2. **Configuration** (yoki bucket sozlamalari) → **Public bucket** yoqilgan bo‘lishi kerak. Yoqilmagan bo‘lsa yoqing va saqlang.  
+3. **Policies** → **New policy** → "Allow public read" yoki "For full customization" → Operation: **SELECT** (yoki "Allow read"), Target: `public` yoki USING expression: `true` → Save.  
+4. Brauzerda sozlamalarni yangilab (Ctrl+F5), avatar rasmini qayta yuklab ko‘ring.
+
 **Agar jadvallar allaqachon yaratilgan bo‘lsa**, faqat yangi ustunlar qo‘shish uchun SQL Editor da:
 
 ```sql
@@ -183,8 +189,26 @@ ALTER TABLE public.projects ADD COLUMN attachment_url TEXT;
 |------|--------|
 | `VITE_SUPABASE_URL` | Supabase dan nusxalagan **Project URL** (https://xxxxx.supabase.co) |
 | `VITE_SUPABASE_ANON_KEY` | Supabase dan nusxalagan **anon public** key |
+| `GEMINI_API_KEY` | (Ixtiyoriy) Google Gemini API kaliti — loyiha tahlilini haqiqiy AI orqali qilish uchun. Qo‘shilmasa, tahlil demo rejimida (fikslangan ball) ishlaydi. |
 
 **Save** → **Redeploy** (yoki **Deploy**).
+
+### 3.3 Loyiha tahlili: Gemini AI (haqiqiy baholash)
+
+Loyiha yuborilganda "AI tahlil" natijasi endi **Google Gemini** orqali haqiqiy baholanishi mumkin.
+
+**Qanday ishlaydi:**  
+- Frontend "Keyingi qadam" bosilganda loyiha matni (nomi, muammo, yechim) **Vercel serverless** `/api/analyze` ga yuboriladi.  
+- `/api/analyze` **Gemini API** ga so‘rov yuboradi va javobda ballar (totalScore, problemValidity, innovation, impact, market, feasibility) qaytadi.  
+- Agar **GEMINI_API_KEY** o‘rnatilmagan bo‘lsa yoki API xato bersa, tahlil **demo rejimida** (fikslangan ball) ishlaydi.
+
+**Gemini API kalitini olish:**  
+1. [Google AI Studio](https://aistudio.google.com/app/apikey) (yoki [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Enable Generative Language API) ga kiring.  
+2. **Create API key** → loyiha (yoki yangi) tanlang → kalitni nusxalang.  
+3. **Vercel** → loyiha → **Settings** → **Environment Variables** → **Add** → Name: `GEMINI_API_KEY`, Value: nusxalagan kalit → **Save**.  
+4. **Redeploy** qiling (yoki keyingi push da avtomatik deploy).
+
+**Lokalda:** `nexus-app/api/analyze.js` Vite dev server tomonidan ishga tushirilmaydi; lokalda tahlil har doim demo rejimida. Haqiqiy tahlilni faqat Vercel deploy dan keyin (yoki `vercel dev` bilan) sinashingiz mumkin.
 
 ---
 
@@ -302,3 +326,22 @@ CREATE POLICY "Profiles update own" ON public.profiles FOR UPDATE USING (auth.ui
 ### 6.4 Lokalda Supabase siz (mock)
 
 `.env` da `VITE_SUPABASE_URL` va `VITE_SUPABASE_ANON_KEY` bo‘lmasa, ilova **mock** rejimida ishlaydi: kirish dropdown orqali (haqiqiy email/parol yo‘q), ma’lumotlar xotirada. Deploy (Vercel) da env o‘rnatilgani uchun u yerda har doim real DB ishlatiladi.
+
+### 6.5 Tashkilot dashboardini tekshirish (Supabase da org_id o‘zgartirish)
+
+**Maqsad:** Oddiy foydalanuvchi sifatida ro‘yxatdan o‘ting, loyiha yuboring, keyin Supabase da o‘z profilingizni ma’lum bir tashkilot (masalan AgroBank) sifatida o‘zgartiring va shu tashkilot panelida loyiha ko‘rinishini tekshiring.
+
+**Qadamlar:**
+
+1. **Ilovada oddiy foydalanuvchi bo‘lib ro‘yxatdan o‘ting** (Ro‘yxatdan o‘tish → O‘quvchi/Talaba yoki Tashkilot — fark yo‘q, keyin o‘zgartiramiz).
+2. **Loyiha yuborish** bo‘limiga kiring. **Loyihani yuborish tashkiloti** dropdown dan kerakli tashkilotni tanlang (masalan **AgroBank (Toshkent)**). Loyiha nomi, muammo, yechimni to‘ldirib loyihani yuboring.
+3. **Supabase** da: **Table Editor** → **profiles** jadvalini oching. Ro‘yxatdan o‘tgan foydalanuvchingizni toping (**Authentication → Users** da email ni ko‘ring, keyin **profiles** da shu `id` (UUID) ga ega qatorni toping).
+4. Shu qatorda quyidagi ustunlarni o‘zgartiring:
+   - **org_id** → tashkilot identifikatori (masalan AgroBank uchun `ORG-AGRO-003`). Boshqa tashkilotlar: `ORG-ITP-001` (IT Park), `ORG-UZVC-002` (UzVC Fund), `ORG-YV-004` (Yoshlar Ventures), `ORG-INNO-005` (Innovatsiya Vazirligi).
+   - **org_name** → tashkilot nomi (masalan `AgroBank`).
+   - **role** → `organization` (tashkilot paneli va loyihalarni ko‘rish uchun).
+5. **Save** (yoki qatorni saqlang).
+6. **Ilovada** sahifani yangilang yoki tizimdan chiqib qayta kiring. Endi siz shu tashkilot sifatida kirgansiz.
+7. **Boshqaruv paneli** → **Loyihalar holati** (yoki Dashboard) ga kiring. Faqat **siz tanlagan tashkilotga yuborilgan** loyihalar (ya’ni `target_org_id` = sizning `org_id` bo‘lgan loyihalar) ko‘rinishi kerak — 1-qadamda yuborgan loyihangiz shu yerda bo‘ladi.
+
+**Qisqacha:** Loyiha **qaysi tashkilotga** yuborilgani **projects.target_org_id** da. Tashkilot **o‘z dashboardida** faqat **o‘ziga yuborilgan** loyihalarni ko‘radi (target_org_id = profiles.org_id). Profilni Supabase da tashkilot `org_id` ga o‘zgartirsangiz, shu tashkilot ko‘ruvchisi sifatida kirib, o‘sha tashkilotga kelgan loyihalarni tekshirasiz.
