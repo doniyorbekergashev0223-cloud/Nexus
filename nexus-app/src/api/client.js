@@ -66,6 +66,25 @@ function memberFromRow(r) {
 }
 
 const apiSupabase = {
+  async getProfile(userId) {
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (error || !data) return null;
+    return data;
+  },
+  async createProfile(profile) {
+    const { error } = await supabase.from('profiles').insert({
+      id: profile.id,
+      full_name: profile.full_name || '',
+      role: profile.role || 'student',
+      region: profile.region || 'Toshkent',
+      org_id: profile.org_id || null,
+      org_name: profile.org_name || null,
+      plan: profile.plan || 'free',
+      school: profile.school || null,
+    });
+    if (error) throw new Error(error.message);
+    return profile;
+  },
   async getProjects({ role, orgId } = {}) {
     let q = supabase.from('projects').select('*').order('created_at', { ascending: false });
     if (role === 'organization' && orgId) q = q.eq('target_org_id', orgId);
@@ -161,6 +180,20 @@ const apiSupabase = {
     if (error) throw new Error(error.message);
     return (data || []).map(r => ({ id: r.id, name: r.name, region: r.region || '' }));
   },
+  async getGlobalStats() {
+    const [projectsRes, orgsRes] = await Promise.all([
+      supabase.from('projects').select('id', { count: 'exact', head: true }),
+      supabase.from('organizations').select('id, region'),
+    ]);
+    const totalProjects = projectsRes.count ?? 0;
+    const orgs = orgsRes.data || [];
+    const totalOrganizations = orgs.length;
+    const regions = new Set(orgs.map(o => o.region).filter(Boolean));
+    const totalRegions = regions.size;
+    const { data: authorsData } = await supabase.from('projects').select('author').limit(5000);
+    const uniqueAuthors = new Set((authorsData || []).map(r => r.author).filter(Boolean)).size;
+    return { totalProjects, totalOrganizations, totalRegions, uniqueAuthors };
+  },
 };
 
 const apiFetch = {
@@ -194,6 +227,21 @@ const apiFetch = {
   },
   getOrganizations() {
     return request('/api/organizations');
+  },
+  async getGlobalStats() {
+    try {
+      const [projects, orgs] = await Promise.all([
+        request('/api/projects'),
+        request('/api/organizations'),
+      ]);
+      const totalProjects = Array.isArray(projects) ? projects.length : 0;
+      const totalOrganizations = Array.isArray(orgs) ? orgs.length : 0;
+      const regions = new Set((orgs || []).map(o => o.region).filter(Boolean));
+      const uniqueAuthors = Array.isArray(projects) ? new Set(projects.map(p => p.author).filter(Boolean)).size : 0;
+      return { totalProjects, totalOrganizations, totalRegions: regions.size, uniqueAuthors };
+    } catch {
+      return { totalProjects: 0, totalOrganizations: 0, totalRegions: 0, uniqueAuthors: 0 };
+    }
   },
 };
 

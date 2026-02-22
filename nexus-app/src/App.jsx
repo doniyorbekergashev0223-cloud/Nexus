@@ -103,6 +103,21 @@ const translations = {
 
 const LanguageContext = createContext();
 
+/** Supabase session + profile dan currentUser (app) formatiga */
+function mapProfileToCurrentUser(user, profile) {
+  const plan = profile?.plan || 'free';
+  const orgId = profile?.org_id || (profile?.role === 'student' ? 'ORG-SCH-007' : profile?.role === 'organization' ? 'ORG-ITP-001' : 'ORG-GOV-000');
+  return {
+    id: user?.id || profile?.id,
+    name: profile?.full_name || user?.email || '',
+    role: profile?.role || 'student',
+    orgId,
+    plan: plan === 'free' ? 'free' : plan === 'pro' ? 'pro' : 'enterprise',
+    orgName: profile?.org_name || profile?.school || '',
+    freeAttempts: plan === 'free' ? 1 : 0,
+  };
+}
+
 // --- CUSTOM ANIMATIONS & CYBERPUNK STYLES ---
 const CustomStyles = () => (
   <style>{`
@@ -431,10 +446,42 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // Real DB: Supabase session → profile → currentUser
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        api.getProfile(session.user.id).then((profile) => {
+          if (profile) {
+            setCurrentUser(mapProfileToCurrentUser(session.user, profile));
+            setCurrentView('app');
+          }
+        }).catch(() => {});
+      }
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setCurrentUser(null);
+        setCurrentView('landing');
+        return;
+      }
+      api.getProfile(session.user.id).then((profile) => {
+        if (profile) {
+          setCurrentUser(mapProfileToCurrentUser(session.user, profile));
+          setCurrentView('app');
+        }
+      }).catch(() => {});
+    });
+    return () => subscription?.unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (!currentUser || currentView !== 'app') return;
     api.getProjects({ role: currentUser.role, orgId: currentUser.orgId })
       .then((data) => setProjects(Array.isArray(data) ? data : []))
+      .catch(() => {});
+    api.getNotifications(currentUser.orgId)
+      .then((data) => setNotifications(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, [currentUser, currentView]);
 
@@ -448,6 +495,7 @@ export default function App() {
   };
 
   const logout = () => {
+    if (supabase) supabase.auth.signOut();
     setCurrentUser(null);
     setCurrentView('landing');
     showToast(translations[lang].nav.logout, "info");
@@ -622,10 +670,18 @@ function LandingPage({ onLoginSuccess, showToast }) {
   const [authModal, setAuthModal] = useState({ isOpen: false });
   const [authMode, setAuthMode] = useState('login'); 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  
+  const [globalStats, setGlobalStats] = useState(null);
+
   const [authForm, setAuthForm] = useState({
     name: '', email: '', password: '', role: 'student', region: 'Toshkent', school: ''
   });
+
+  useEffect(() => {
+    if (typeof api.getGlobalStats !== 'function') return;
+    api.getGlobalStats()
+      .then(setGlobalStats)
+      .catch(() => setGlobalStats({ totalProjects: 0, totalOrganizations: 0, totalRegions: 0, uniqueAuthors: 0 }));
+  }, []);
 
   const handleAuthModalOpen = (initialRole = 'student', mode = 'login') => {
     setAuthMode(mode);
@@ -633,15 +689,90 @@ function LandingPage({ onLoginSuccess, showToast }) {
     setAuthModal({ isOpen: true });
   };
 
-  const executeAuth = (e, isGoogle = false) => {
-    if(e) e.preventDefault();
+  const executeAuth = async (e, isGoogle = false) => {
+    if (e) e.preventDefault();
     setIsLoggingIn(true);
-    
+
+    if (supabase && !isGoogle) {
+      try {
+        if (authMode === 'login') {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: (authForm.email || '').trim(),
+            password: authForm.password || '',
+          });
+          if (error) {
+            showToast(error.message, "error");
+            setIsLoggingIn(false);
+            return;
+          }
+          const profile = await api.getProfile(data.user.id);
+          if (!profile) {
+            showToast("Profil topilmadi. Iltimos, qayta kiring.", "warning");
+            setIsLoggingIn(false);
+            return;
+          }
+          setAuthModal({ isOpen: false });
+          setIsLoggingIn(false);
+          onLoginSuccess(mapProfileToCurrentUser(data.user, profile));
+          showToast(t.auth.loginTitle + " - Muvaffaqiyatli!", "success");
+          return;
+        }
+        if (authMode === 'register') {
+          const { data, error } = await supabase.auth.signUp({
+            email: (authForm.email || '').trim(),
+            password: authForm.password || '',
+            options: {
+              data: {
+                full_name: authForm.name || '',
+                role: authForm.role,
+                region: authForm.region || 'Toshkent',
+                school: authForm.school || '',
+              },
+            },
+          });
+          if (error) {
+            showToast(error.message, "error");
+            setIsLoggingIn(false);
+            return;
+          }
+          const orgId = authForm.role === 'student' ? 'ORG-SCH-007' : authForm.role === 'organization' ? 'ORG-ITP-001' : 'ORG-GOV-000';
+          const orgName = authForm.role === 'student' ? (authForm.school || '') : authForm.role === 'organization' ? (authForm.school || '') : 'Davlat Nazorati';
+          const plan = authForm.role === 'student' ? 'free' : authForm.role === 'organization' ? 'pro' : 'enterprise';
+          await api.createProfile({
+            id: data.user.id,
+            full_name: authForm.name || '',
+            role: authForm.role,
+            region: authForm.region || 'Toshkent',
+            org_id: orgId,
+            org_name: orgName,
+            school: authForm.school || null,
+            plan,
+          });
+          const profile = await api.getProfile(data.user.id);
+          setAuthModal({ isOpen: false });
+          setIsLoggingIn(false);
+          onLoginSuccess(mapProfileToCurrentUser(data.user, profile));
+          showToast(t.settings.saved, "success");
+          return;
+        }
+      } catch (err) {
+        showToast(err.message || "Xatolik yuz berdi", "error");
+        setIsLoggingIn(false);
+        return;
+      }
+    }
+
+    if (isGoogle && supabase) {
+      showToast("Google orqali kirish tez orada qo'shiladi.", "info");
+      setIsLoggingIn(false);
+      return;
+    }
+
+    // Mock auth (Supabase ulanmaganida)
     setTimeout(() => {
       setIsLoggingIn(false);
       setAuthModal({ isOpen: false });
       if (authMode === 'register') showToast(t.settings.saved, "success");
-
       let mockedUser = {};
       if (authForm.role === 'student') {
         mockedUser = { id: 'u1', name: authForm.name || "Sardor Rustamov", role: 'student', orgId: 'ORG-SCH-007', plan: 'free', orgName: authForm.school || '7-Maktab', freeAttempts: 1 };
@@ -650,7 +781,6 @@ function LandingPage({ onLoginSuccess, showToast }) {
       } else {
         mockedUser = { id: 'u3', name: authForm.name || "Vazirlik Xodimi", role: 'gov', orgId: 'ORG-GOV-000', plan: 'enterprise', orgName: 'Davlat Nazorati', freeAttempts: 0 };
       }
-      
       onLoginSuccess(mockedUser);
     }, 1500);
   };
@@ -758,10 +888,10 @@ function LandingPage({ onLoginSuccess, showToast }) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 w-full max-w-7xl mx-auto slide-up delay-500 px-4 md:px-8 mb-24 md:mb-40 min-h-0">
-          <StatBox icon={Users} value="12.5k+" label={t.stats.users} color="blue" delay="100" />
-          <StatBox icon={Folder} value="3,210" label={t.stats.startups} color="fuchsia" delay="200" />
-          <StatBox icon={Building} value="150+" label={t.stats.orgs} color="emerald" delay="300" />
-          <StatBox icon={Globe} value="14" label={t.stats.regions} color="blue" delay="400" />
+          <StatBox icon={Users} value={globalStats != null ? String(globalStats.uniqueAuthors) : '…'} label={t.stats.users} color="blue" delay="100" />
+          <StatBox icon={Folder} value={globalStats != null ? String(globalStats.totalProjects) : '…'} label={t.stats.startups} color="fuchsia" delay="200" />
+          <StatBox icon={Building} value={globalStats != null ? String(globalStats.totalOrganizations) : '…'} label={t.stats.orgs} color="emerald" delay="300" />
+          <StatBox icon={Globe} value={globalStats != null ? String(globalStats.totalRegions) : '…'} label={t.stats.regions} color="blue" delay="400" />
         </div>
 
         <section id="about" className="w-full max-w-7xl mx-auto px-4 md:px-8 mb-24 md:mb-40 slide-up pt-10">
@@ -1128,8 +1258,8 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 relative scroll-smooth custom-scrollbar">
-          {activeTab === 'dashboard' && <Dashboard />}
-          {activeTab === 'kpi' && <KPIDashboard />}
+          {activeTab === 'dashboard' && <Dashboard projects={projects} />}
+          {activeTab === 'kpi' && <KPIDashboard projects={projects} />}
           {activeTab === 'team' && <TeamList currentUser={currentUser} showToast={showToast} />}
           {activeTab === 'payments' && <PaymentsDashboard currentUser={currentUser} showToast={showToast} />}
           {activeTab === 'settings' && <SettingsPanel currentUser={currentUser} showToast={showToast} />}
@@ -1150,8 +1280,34 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
   );
 }
 
-function Dashboard() {
+function Dashboard({ projects = [] }) {
   const { t } = useContext(LanguageContext);
+  const stats = React.useMemo(() => {
+    const total = projects.length;
+    const approved = projects.filter(p => p.status === 'Qabul qilindi').length;
+    const rejected = projects.filter(p => p.status === 'Rad etildi').length;
+    const received = projects.filter(p => p.status === "Ko'rilmoqda").length;
+    const uniqueAuthors = new Set(projects.map(p => p.author)).size;
+    const monthNames = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+    const byMonth = {};
+    monthNames.forEach((_, i) => { byMonth[i] = { name: monthNames[i], projects: 0 }; });
+    projects.forEach(p => {
+      const d = p.date || (p.created_at && p.created_at.slice(0, 7));
+      if (d) {
+        const monthIdx = parseInt(d.slice(5, 7), 10) - 1;
+        if (monthIdx >= 0 && monthIdx <= 11) byMonth[monthIdx].projects += 1;
+      }
+    });
+    const chartData = monthNames.map((name, i) => ({ name, projects: byMonth[i].projects }));
+    const pieData = [
+      { name: 'Qabul qilindi', value: approved, color: '#10B981' },
+      { name: 'Rad etildi', value: rejected, color: '#EF4444' },
+      { name: "Ko'rilmoqda", value: received, color: '#3b82f6' },
+    ].filter(d => d.value > 0);
+    if (pieData.length === 0) pieData.push({ name: "Loyihalar yo'q", value: 1, color: '#64748b' });
+    return { total, approved, rejected, received, uniqueAuthors, chartData, pieData };
+  }, [projects]);
+
   return (
     <div className="max-w-7xl mx-auto pb-10">
       <div className="slide-up mb-6 md:mb-10">
@@ -1160,10 +1316,10 @@ function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-14">
-        <DashCard title={t.dashboard.totalUsers} value="2.4k" icon={Users} color="blue" delay="100" />
-        <DashCard title={t.dashboard.received} value="124" icon={Folder} color="fuchsia" delay="200" />
-        <DashCard title={t.dashboard.rejected} value="32" icon={AlertTriangle} color="red" delay="300" />
-        <DashCard title={t.dashboard.approved} value="92" icon={CheckCircle} color="emerald" delay="400" />
+        <DashCard title={t.dashboard.totalUsers} value={String(stats.uniqueAuthors)} icon={Users} color="blue" delay="100" />
+        <DashCard title={t.dashboard.received} value={String(stats.total)} icon={Folder} color="fuchsia" delay="200" />
+        <DashCard title={t.dashboard.rejected} value={String(stats.rejected)} icon={AlertTriangle} color="red" delay="300" />
+        <DashCard title={t.dashboard.approved} value={String(stats.approved)} icon={CheckCircle} color="emerald" delay="400" />
       </div>
 
       <div className="slide-up delay-500 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
@@ -1173,7 +1329,7 @@ function Dashboard() {
           </h3>
           <div className="h-56 md:h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
+              <LineChart data={stats.chartData} margin={{ top: 10, right: 10, bottom: 5, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} fontWeight="bold" />
                 <YAxis stroke="#64748B" fontSize={11} tickLine={false} axisLine={false} fontWeight="bold" />
@@ -1191,14 +1347,14 @@ function Dashboard() {
           <div className="h-56 md:h-80 w-full flex flex-col items-center justify-center relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none" cornerRadius={10}>
-                  {pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} style={{ filter: `drop-shadow(0px 0px 10px ${entry.color}50)` }} />))}
+                <Pie data={stats.pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none" cornerRadius={10}>
+                  {stats.pieData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} style={{ filter: `drop-shadow(0px 0px 10px ${entry.color}50)` }} />))}
                 </Pie>
                 <RechartsTooltip contentStyle={{ backgroundColor: 'rgba(5, 5, 10, 0.9)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', color: '#fff' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-               <span className="text-2xl md:text-4xl font-black text-white drop-shadow-md">100%</span>
+               <span className="text-2xl md:text-4xl font-black text-white drop-shadow-md">{stats.total}</span>
             </div>
           </div>
         </div>
@@ -1207,8 +1363,21 @@ function Dashboard() {
   );
 }
 
-function KPIDashboard() {
+function KPIDashboard({ projects = [] }) {
   const { t } = useContext(LanguageContext);
+  const kpiStats = React.useMemo(() => {
+    const bySchool = {};
+    projects.forEach(p => {
+      const s = (p.school || "—").trim() || "—";
+      bySchool[s] = (bySchool[s] || 0) + 1;
+    });
+    const sorted = Object.entries(bySchool).sort((a, b) => b[1] - a[1]);
+    const topSchool = sorted[0] ? sorted[0][0] : "—";
+    const chartData = sorted.slice(0, 8).map(([hudud, aktivlik]) => ({ hudud, aktivlik }));
+    if (chartData.length === 0) chartData.push({ hudud: "—", aktivlik: 0 });
+    return { topSchool, chartData };
+  }, [projects]);
+
   return (
     <div className="max-w-7xl mx-auto pb-10">
       <div className="slide-up mb-6 md:mb-12">
@@ -1217,10 +1386,10 @@ function KPIDashboard() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-10">
-        <DashCard title={t.kpi.activeRegion} value="Toshkent" icon={Globe} color="fuchsia" delay="100" />
-        <DashCard title={t.kpi.topSchool} value="7-Maktab" icon={Building} color="blue" delay="200" />
+        <DashCard title={t.kpi.activeRegion} value="—" icon={Globe} color="fuchsia" delay="100" />
+        <DashCard title={t.kpi.topSchool} value={kpiStats.topSchool} icon={Building} color="blue" delay="200" />
         <div className="col-span-2 lg:col-span-1">
-           <DashCard title={t.kpi.totalInv} value="$1.2M" icon={TrendingUp} color="emerald" delay="300" />
+           <DashCard title={t.kpi.totalInv} value="—" icon={TrendingUp} color="emerald" delay="300" />
         </div>
       </div>
 
@@ -1230,13 +1399,13 @@ function KPIDashboard() {
         </h3>
         <div className="h-64 md:h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={kpiRegionData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
+            <BarChart data={kpiStats.chartData} margin={{ top: 20, right: 10, left: -20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="hudud" stroke="#64748B" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} />
               <YAxis stroke="#64748B" fontSize={11} fontWeight="bold" tickLine={false} axisLine={false} />
               <RechartsTooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} contentStyle={{ backgroundColor: 'rgba(5, 5, 10, 0.9)', backdropFilter: 'blur(16px)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '16px', color: '#fff' }} />
               <Bar dataKey="aktivlik" fill="#3b82f6" radius={[8, 8, 0, 0]} barSize={25}>
-                {kpiRegionData.map((entry, index) => (<Cell key={`cell-${index}`} fill={index === 1 ? '#d946ef' : '#3b82f6'} />))}
+                {kpiStats.chartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={index === 1 ? '#d946ef' : '#3b82f6'} />))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>

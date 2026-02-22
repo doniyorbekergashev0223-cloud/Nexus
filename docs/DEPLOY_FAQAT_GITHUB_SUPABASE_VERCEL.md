@@ -98,7 +98,25 @@ INSERT INTO public.organizations (id, name, region) VALUES
   ('ORG-INNO-005', 'Innovatsiya Vazirligi', 'Toshkent')
 ON CONFLICT (id) DO NOTHING;
 
+-- Profillar (Supabase Auth — kirish roli va tashkilot)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student','organization','gov')),
+  region TEXT DEFAULT 'Toshkent',
+  org_id TEXT,
+  org_name TEXT,
+  plan TEXT DEFAULT 'free',
+  school TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- RLS
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Profiles read own" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Profiles insert own" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Profiles update own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.team ENABLE ROW LEVEL SECURITY;
@@ -197,3 +215,53 @@ Agar platformada **Supabase Auth** (email/parol) ishlatilsa, "Parolni unutdingiz
 | 6 | Supabase | `updateUser({ password })` → parol yangilanadi, keyin kirish sahifasiga qaytish |
 
 Vercel da qo‘shimcha environment variable kerak emas — `VITE_SUPABASE_URL` va `VITE_SUPABASE_ANON_KEY` yetarli.
+
+---
+
+## 6. Platformani 100% real DB bilan ishlatish
+
+Deploy qilingan ilova **Supabase** ulanganida avtomatik ravishda real ma’lumotlar bazasi bilan ishlaydi:
+
+- **Kirish / Ro‘yxatdan o‘tish** — Supabase Auth (email + parol). Ro‘yxatdan o‘tishda `profiles` jadvaliga yozuv yoziladi (role, org_id, org_name va hokazo).
+- **Loyihalar, bildirishnomalar, jamoa, tashkilotlar** — barchasi Supabase jadvallaridan o‘qiladi va yoziladi.
+- **Session** — sahifa yangilansa ham, Supabase session saqlanadi; foydalanuvchi qayta kirish qilmasdan panelda qoladi.
+- **Chiqish** — `signOut()` session ni tozalaydi.
+
+### 6.1 Supabase da qilish kerak
+
+1. **Authentication → Providers** da **Email** yoqilgan bo‘lishi kerak (Sign in with email).
+2. **2.1** bo‘limidagi SQL da **profiles** jadvali va unga RLS bor. Agar loyihani oldin yaratgan bo‘lsangiz va `profiles` yo‘q bo‘lsa, SQL Editor da quyidagini alohida ishga tushiring:
+
+```sql
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student','organization','gov')),
+  region TEXT DEFAULT 'Toshkent',
+  org_id TEXT,
+  org_name TEXT,
+  plan TEXT DEFAULT 'free',
+  school TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Profiles read own" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Profiles insert own" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Profiles update own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+```
+
+3. **Redirect URLs** (bo‘lim 5) — parol tiklash va production sayt manzili qo‘shilgan bo‘lishi kerak.
+
+### 6.2 Umumiy va ichki statistikalar (real DB)
+
+- **Landing sahifa** (Foydalanuvchilar, Startaplar, Tashkilotlar, Hududlar) — `api.getGlobalStats()` orqali Supabase dan: loyihalar soni, tashkilotlar soni, hududlar soni, unique mualliflar soni.
+- **Boshqaruv paneli (Dashboard)** — loyihalar va statuslar real `projects` dan hisoblanadi (Kelib tushgan, Rad etildi, Qabul qilindi, grafiklar).
+- **KPI sahifa** — eng ko‘p loyiha yuborgan maktab va maktablar bo‘yicha grafik real `projects` dan (school bo‘yicha guruhlash).
+
+### 6.3 Hisob va To‘lovlar (payments)
+
+**Hisob va To‘lovlar** bo‘limi hozircha **demo rejimda**: balans va tranzaksiyalar real ma’lumotlar bazasida saqlanmaydi. To‘lov qilganda faqat lokal state yangilanadi, sahifa yangilansa ma’lumot yo‘qoladi. Haqiqiy to‘lovni ulash uchun keyinchalik `transactions` jadvali va (ixtiyoriy) `profiles.balance` yoki alohida `wallets` jadvali qo‘shish kerak.
+
+### 6.4 Lokalda Supabase siz (mock)
+
+`.env` da `VITE_SUPABASE_URL` va `VITE_SUPABASE_ANON_KEY` bo‘lmasa, ilova **mock** rejimida ishlaydi: kirish dropdown orqali (haqiqiy email/parol yo‘q), ma’lumotlar xotirada. Deploy (Vercel) da env o‘rnatilgani uchun u yerda har doim real DB ishlatiladi.
