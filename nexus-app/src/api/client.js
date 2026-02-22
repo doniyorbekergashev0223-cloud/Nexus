@@ -36,6 +36,7 @@ function projectFromRow(r) {
     feedback: r.feedback || '',
     date: r.created_at ? r.created_at.slice(0, 10) : '',
     ipProtected: !!r.ip_protected,
+    attachmentUrl: r.attachment_url || null,
   };
 }
 
@@ -81,9 +82,36 @@ const apiSupabase = {
       org_name: profile.org_name || null,
       plan: profile.plan || 'free',
       school: profile.school || null,
+      avatar_url: profile.avatar_url || null,
     });
     if (error) throw new Error(error.message);
     return profile;
+  },
+  async updateProfile(userId, updates) {
+    const row = {};
+    if (updates.full_name != null) row.full_name = updates.full_name;
+    if (updates.avatar_url != null) row.avatar_url = updates.avatar_url;
+    if (updates.region != null) row.region = updates.region;
+    if (updates.school != null) row.school = updates.school;
+    if (Object.keys(row).length === 0) return;
+    const { error } = await supabase.from('profiles').update(row).eq('id', userId);
+    if (error) throw new Error(error.message);
+  },
+  async uploadAvatar(userId, file) {
+    const ext = (file.name || '').split('.').pop() || 'jpg';
+    const path = `${userId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+    return data.publicUrl;
+  },
+  async uploadProjectFile(userId, file) {
+    const safeName = (file.name || 'file').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const path = `${userId}/${Date.now()}_${safeName}`;
+    const { error } = await supabase.storage.from('project-files').upload(path, file, { upsert: false });
+    if (error) throw new Error(error.message);
+    const { data } = supabase.storage.from('project-files').getPublicUrl(path);
+    return data.publicUrl;
   },
   async getProjects({ role, orgId } = {}) {
     let q = supabase.from('projects').select('*').order('created_at', { ascending: false });
@@ -108,6 +136,7 @@ const apiSupabase = {
       feedback: body.feedback || '',
       ip_protected: !!body.ipProtected,
     };
+    if (body.attachmentUrl) row.attachment_url = body.attachmentUrl;
     const { data, error } = await supabase.from('projects').insert(row).select().single();
     if (error) throw new Error(error.message);
     return projectFromRow(data);
@@ -227,6 +256,18 @@ const apiFetch = {
   },
   getOrganizations() {
     return request('/api/organizations');
+  },
+  async getProfile() {
+    return null;
+  },
+  async updateProfile() {
+    return Promise.resolve();
+  },
+  async uploadAvatar() {
+    throw new Error('Avatar yuklash faqat Supabase ulanganida ishlaydi');
+  },
+  async uploadProjectFile() {
+    throw new Error('Fayl yuklash faqat Supabase ulanganida ishlaydi');
   },
   async getGlobalStats() {
     try {

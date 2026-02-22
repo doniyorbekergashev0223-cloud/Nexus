@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
   badges JSONB DEFAULT '[]',
   feedback TEXT,
   ip_protected BOOLEAN DEFAULT false,
+  attachment_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_projects_org ON public.projects(org_id);
@@ -108,6 +109,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   org_name TEXT,
   plan TEXT DEFAULT 'free',
   school TEXT,
+  avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -133,6 +135,23 @@ CREATE POLICY "Allow all organizations" ON public.organizations FOR ALL USING (t
 2. Nusxalab qo‘ying:
    - **Project URL** → keyinroq `VITE_SUPABASE_URL`
    - **anon public** key → keyinroq `VITE_SUPABASE_ANON_KEY`
+
+### 2.3 Storage (avatar va loyiha fayllari)
+
+Sozlamalarda avatar va loyiha yuborishda fayl yuklash ishlashi uchun ikkita bucket yarating:
+
+1. Chap menyu → **Storage** → **New bucket**.
+2. **avatars** — nom: `avatars`, **Public bucket** belgilang → Create.
+3. Yana **New bucket** → **project-files** — nom: `project-files`, **Public bucket** → Create.
+
+(Policy: default "Allow public read" yoki "Allow authenticated upload" — kod `supabase.storage.from('avatars').upload` va `from('project-files').upload` ishlatadi; authenticated foydalanuvchilar yuklaydi.)
+
+**Agar jadvallar allaqachon yaratilgan bo‘lsa**, faqat yangi ustunlar qo‘shish uchun SQL Editor da:
+
+```sql
+ALTER TABLE public.profiles ADD COLUMN avatar_url TEXT;
+ALTER TABLE public.projects ADD COLUMN attachment_url TEXT;
+```
 
 ---
 
@@ -251,6 +270,14 @@ CREATE POLICY "Profiles update own" ON public.profiles FOR UPDATE USING (auth.ui
 ```
 
 3. **Redirect URLs** (bo‘lim 5) — parol tiklash va production sayt manzili qo‘shilgan bo‘lishi kerak.
+
+#### Login / Ro‘yxatdan o‘tish ishlamasa (400 yoki 500 xato)
+
+- **400 (Bad Request)** — odatda parol yoki so‘rov formati. **Authentication → Providers → Email** da **Confirm email** o‘chirilgan bo‘lishi kerak (agar SMTP sozlamagan bo‘lsangiz). Aks holda ro‘yxatdan o‘tishda Supabase email tasdiqlash kutadi va login 400 yoki "Email not confirmed" beradi.
+- **500 (Signup)** — server ichida xato. Tekshiring:
+  - **Authentication → Providers → Email** yoqilgan va **Confirm email** o‘chiq (yoki SMTP to‘g‘ri sozlangan).
+  - **Redirect URLs** da sayt manzilingiz bor: `https://SIZNING-DOMEN.vercel.app` va `http://localhost:5173`.
+- **Google bilan kirish** ishlamasa: **Authentication → Providers → Google** yoqilgan bo‘lishi kerak; **Redirect URLs** da sayt manzili qo‘shilgan bo‘lishi kerak (masalan `https://xxx.vercel.app`). Ilovada "Google bilan davom etish" bosilganda Supabase Google sahifasiga yo‘naltiradi, keyin saytga qaytadi va profil avtomatik yaratiladi (agar birinchi marta bo‘lsa).
 
 ### 6.2 Umumiy va ichki statistikalar (real DB)
 

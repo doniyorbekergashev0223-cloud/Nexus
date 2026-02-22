@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   org_name TEXT,
   plan TEXT DEFAULT 'free',
   school TEXT,
+  avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
   badges JSONB DEFAULT '[]',
   feedback TEXT,
   ip_protected BOOLEAN DEFAULT false,
+  attachment_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

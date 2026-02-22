@@ -23,7 +23,7 @@ const translations = {
     hero: { badge: "AI Premium Tahlil V2", title1: "Iste'dodlar hamma joyda,", title2: "imkoniyatlar ham shunday bo'lishi kerak.", desc: "Rivojlanayotgan hududlardagi iqtidorlar va yirik investorlar o'rtasidagi raqamli ko'prik. G'oyangizni bepul baholang va MVP ga aylantiring.", startFree: "Bepul boshlash", video: "Video qo'llanma" },
     stats: { users: "Foydalanuvchilar", startups: "Startaplar", orgs: "Tashkilotlar", regions: "Hududlar" },
     dashboard: { title: "Tashkilot Paneli", desc: "Umumiy statistika va AI tahlil xulosalari", totalUsers: "Foydalanuvchilar", received: "Kelib Tushgan", rejected: "Rad Etilgan", approved: "Qabul Qilingan", growth: "Loyihalar dinamikasi", statusDist: "Loyiha holati" },
-    submit: { title: "Yangi loyiha yaratish", desc: "G'oyangizni kiriting. Bizning AI Premium tizimimiz uni avtomatik baholaydi.", projName: "Loyiha Nomi", problem: "Muammo", solution: "Yechim (MVP)", ip: "IP Himoyalangan", next: "Keyingi qadam", selectOrg: "Loyihani yuborish tashkiloti",
+    submit: { title: "Yangi loyiha yaratish", desc: "G'oyangizni kiriting. Bizning AI Premium tizimimiz uni avtomatik baholaydi.", projName: "Loyiha Nomi", problem: "Muammo", solution: "Yechim (MVP)", ip: "IP Himoyalangan", next: "Keyingi qadam", selectOrg: "Loyihani yuborish tashkiloti", attachFile: "Loyiha fayli (ixtiyoriy)", attachHint: "Faqat PDF, PPTX, Word (doc, docx)",
       projNameEx: "Masalan: SmartAgro - Suvni tejash tizimi",
       problemEx: "Masalan: Qishloq xo'jaligida eski usullar sababli suvning 40% ortiqcha isrof bo'lishi va ekinlarning vaqtida sug'orilmasligi.",
       solutionEx: "Masalan: IoT datchiklar orqali tuproq namligini aniqlab, avtomatik ravishda sug'orishni yo'lga qo'yuvchi arzon AI platforma.",
@@ -50,7 +50,7 @@ const translations = {
     hero: { badge: "AI Premium Анализ V2", title1: "Таланты есть везде,", title2: "возможности тоже должны быть такими.", desc: "Цифровой мост между талантами в развивающихся регионах и крупными инвесторами. Оцените свою идею бесплатно и превратите в MVP.", startFree: "Начать бесплатно", video: "Видеоинструкция" },
     stats: { users: "Пользователи", startups: "Стартапы", orgs: "Организации", regions: "Регионы" },
     dashboard: { title: "Панель Организации", desc: "Общая статистика и выводы AI анализа", totalUsers: "Пользователи", received: "Поступило", rejected: "Отклонено", approved: "Одобрено", growth: "Динамика проектов", statusDist: "Статус проектов" },
-    submit: { title: "Создать новый проект", desc: "Введите вашу идею. Наша система AI Premium автоматически оценит ее.", projName: "Название проекта", problem: "Проблема", solution: "Решение (MVP)", ip: "IP Защищено", next: "Следующий шаг", selectOrg: "Организация для отправки",
+    submit: { title: "Создать новый проект", desc: "Введите вашу идею. Наша система AI Premium автоматически оценит ее.", projName: "Название проекта", problem: "Проблема", solution: "Решение (MVP)", ip: "IP Защищено", next: "Следующий шаг", selectOrg: "Организация для отправки", attachFile: "Файл проекта (необязательно)", attachHint: "Только PDF, PPTX, Word (doc, docx)",
       projNameEx: "Например: SmartAgro - Система экономии воды",
       problemEx: "Например: 40% воды тратится впустую в сельском хозяйстве из-за устаревших методов полива...",
       solutionEx: "Например: Дешевая платформа ИИ, измеряющая влажность почвы с помощью датчиков IoT...",
@@ -77,7 +77,7 @@ const translations = {
     hero: { badge: "AI Premium Analysis V2", title1: "Talent is everywhere,", title2: "opportunities should be too.", desc: "A digital bridge between talents in developing regions and major investors. Evaluate your idea for free and turn it into an MVP.", startFree: "Start for free", video: "Video Tutorial" },
     stats: { users: "Users", startups: "Startups", orgs: "Organizations", regions: "Regions" },
     dashboard: { title: "Organization Panel", desc: "General statistics and AI analysis insights", totalUsers: "Total Users", received: "Received", rejected: "Rejected", approved: "Approved", growth: "Project Dynamics", statusDist: "Project Status" },
-    submit: { title: "Create New Project", desc: "Enter your idea. Our AI Premium system will automatically evaluate it.", projName: "Project Name", problem: "Problem", solution: "Solution (MVP)", ip: "IP Protected", next: "Next Step", selectOrg: "Send project to organization",
+    submit: { title: "Create New Project", desc: "Enter your idea. Our AI Premium system will automatically evaluate it.", projName: "Project Name", problem: "Problem", solution: "Solution (MVP)", ip: "IP Protected", next: "Next Step", selectOrg: "Send project to organization", attachFile: "Project file (optional)", attachHint: "Only PDF, PPTX, Word (doc, docx)",
       projNameEx: "Example: SmartAgro - Water saving system",
       problemEx: "Example: 40% of water is wasted in agriculture due to outdated irrigation methods...",
       solutionEx: "Example: A cheap AI platform that measures soil moisture via IoT sensors and automates watering.",
@@ -110,11 +110,13 @@ function mapProfileToCurrentUser(user, profile) {
   return {
     id: user?.id || profile?.id,
     name: profile?.full_name || user?.email || '',
+    email: user?.email || '',
     role: profile?.role || 'student',
     orgId,
     plan: plan === 'free' ? 'free' : plan === 'pro' ? 'pro' : 'enterprise',
     orgName: profile?.org_name || profile?.school || '',
     freeAttempts: plan === 'free' ? 1 : 0,
+    avatarUrl: profile?.avatar_url || null,
   };
 }
 
@@ -446,18 +448,41 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
+  // Session dan profil yo'q bo'lsa (masalan Google birinchi kirish) — default profil yaratish
+  const ensureProfileThenLogin = (user) => {
+    api.getProfile(user.id).then((profile) => {
+      if (profile) {
+        setCurrentUser(mapProfileToCurrentUser(user, profile));
+        setCurrentView('app');
+        return;
+      }
+      const meta = user.user_metadata || {};
+      const defaultProfile = {
+        id: user.id,
+        full_name: meta.full_name || meta.name || user.email || '',
+        role: 'student',
+        region: 'Toshkent',
+        org_id: 'ORG-SCH-007',
+        org_name: meta.school || '',
+        plan: 'free',
+        school: meta.school || null,
+      };
+      api.createProfile(defaultProfile).then(() => {
+        api.getProfile(user.id).then((p) => {
+          if (p) {
+            setCurrentUser(mapProfileToCurrentUser(user, p));
+            setCurrentView('app');
+          }
+        }).catch(() => {});
+      }).catch(() => {});
+    }).catch(() => {});
+  };
+
   // Real DB: Supabase session → profile → currentUser
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        api.getProfile(session.user.id).then((profile) => {
-          if (profile) {
-            setCurrentUser(mapProfileToCurrentUser(session.user, profile));
-            setCurrentView('app');
-          }
-        }).catch(() => {});
-      }
+      if (session) ensureProfileThenLogin(session.user);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
@@ -465,12 +490,7 @@ export default function App() {
         setCurrentView('landing');
         return;
       }
-      api.getProfile(session.user.id).then((profile) => {
-        if (profile) {
-          setCurrentUser(mapProfileToCurrentUser(session.user, profile));
-          setCurrentView('app');
-        }
-      }).catch(() => {});
+      ensureProfileThenLogin(session.user);
     });
     return () => subscription?.unsubscribe();
   }, []);
@@ -543,6 +563,14 @@ export default function App() {
               projects={visibleProjects} setProjects={setProjects} notifications={notifications}
               setNotifications={setNotifications} updateProjectStatus={updateProjectStatus}
               showToast={showToast}
+              refreshUser={async () => {
+                if (!supabase) return;
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                  const profile = await api.getProfile(session.user.id);
+                  if (profile) setCurrentUser(mapProfileToCurrentUser(session.user, profile));
+                }
+              }}
             />
           )}
         </div>
@@ -763,8 +791,20 @@ function LandingPage({ onLoginSuccess, showToast }) {
     }
 
     if (isGoogle && supabase) {
-      showToast("Google orqali kirish tez orada qo'shiladi.", "info");
-      setIsLoggingIn(false);
+      const redirectTo = `${window.location.origin}${window.location.pathname || ''}`;
+      supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+        .then(({ error }) => {
+          if (error) {
+            showToast(error.message || "Google kirish xatosi", "error");
+            setIsLoggingIn(false);
+            return;
+          }
+          showToast("Google sahifasiga yo'naltirilmoqda...", "info");
+        })
+        .catch((err) => {
+          showToast(err.message || "Google kirish xatosi", "error");
+          setIsLoggingIn(false);
+        });
       return;
     }
 
@@ -1107,7 +1147,7 @@ function LandingPage({ onLoginSuccess, showToast }) {
   );
 }
 
-function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, projects, setProjects, notifications, setNotifications, updateProjectStatus, showToast }) {
+function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, projects, setProjects, notifications, setNotifications, updateProjectStatus, showToast, refreshUser }) {
   const { lang, setLang, t } = useContext(LanguageContext);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -1262,7 +1302,7 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
           {activeTab === 'kpi' && <KPIDashboard projects={projects} />}
           {activeTab === 'team' && <TeamList currentUser={currentUser} showToast={showToast} />}
           {activeTab === 'payments' && <PaymentsDashboard currentUser={currentUser} showToast={showToast} />}
-          {activeTab === 'settings' && <SettingsPanel currentUser={currentUser} showToast={showToast} />}
+          {activeTab === 'settings' && <SettingsPanel currentUser={currentUser} showToast={showToast} refreshUser={refreshUser} />}
           {activeTab === 'submit' && currentUser.role === 'student' && <ProjectSubmission currentUser={currentUser} setProjects={setProjects} setActiveTab={setActiveTab} setNotifications={setNotifications} notifications={notifications} showToast={showToast} />}
           {activeTab === 'projects' && <ProjectList projects={projects} updateProjectStatus={updateProjectStatus} onViewProject={setViewProject} />}
         </div>
@@ -1586,15 +1626,61 @@ function TeamMemberCard({ member, showToast, t, onDelete, idx = 0 }) {
   );
 }
 
-function SettingsPanel({ currentUser, showToast }) {
+function SettingsPanel({ currentUser, showToast, refreshUser }) {
   const { t } = useContext(LanguageContext);
   const [formData, setFormData] = useState({
-    name: currentUser.name,
-    phone: '+998 90 123 45 67'
+    name: currentUser.name || '',
+    email: currentUser.email || '',
+    avatarUrl: currentUser.avatarUrl || null,
   });
-  
-  const handleSave = () => { showToast(t.settings.saved, "success"); };
-  const initials = (formData.name || 'U').split(' ').map(n=>n[0]).slice(0,2).join('');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setFormData({
+      name: currentUser.name || '',
+      email: currentUser.email || '',
+      avatarUrl: currentUser.avatarUrl || null,
+    });
+  }, [currentUser.id, currentUser.name, currentUser.email, currentUser.avatarUrl]);
+
+  const initials = (formData.name || 'U').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
+  const avatarDisplayUrl = formData.avatarUrl || currentUser.avatarUrl;
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      showToast("Rasm faylini tanlang (jpg, png, gif, webp)", "warning");
+      return;
+    }
+    if (!supabase || !currentUser?.id) return;
+    setUploading(true);
+    try {
+      const url = await api.uploadAvatar(currentUser.id, file);
+      setFormData(prev => ({ ...prev, avatarUrl: url }));
+      showToast("Rasm yuklandi. Saqlash tugmasini bosing.", "success");
+    } catch (err) {
+      showToast(err.message || "Rasm yuklanmadi", "error");
+    }
+    setUploading(false);
+    e.target.value = '';
+  };
+
+  const handleSave = async () => {
+    if (!supabase || !currentUser?.id) {
+      showToast(t.settings.saved, "success");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.updateProfile(currentUser.id, { full_name: formData.name.trim(), avatar_url: formData.avatarUrl || null });
+      if (typeof refreshUser === 'function') await refreshUser();
+      showToast(t.settings.saved, "success");
+    } catch (err) {
+      showToast(err.message || "Saqlanmadi", "error");
+    }
+    setSaving(false);
+  };
 
   return (
     <div className="max-w-5xl mx-auto pb-10 slide-up">
@@ -1608,25 +1694,36 @@ function SettingsPanel({ currentUser, showToast }) {
            <h3 className="text-lg md:text-xl font-black text-white mb-6 border-b border-white/10 pb-4">{t.settings.editProfile}</h3>
            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px]">
-                   <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-xl md:text-2xl font-black text-white">{initials}</div>
+                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] flex-shrink-0 overflow-hidden">
+                   {avatarDisplayUrl ? (
+                     <img src={avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+                   ) : (
+                     <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-xl md:text-2xl font-black text-white">{initials}</div>
+                   )}
                  </div>
-                 <button className="px-5 py-2 md:px-6 md:py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors text-xs md:text-sm">{t.settings.uploadImg}</button>
+                 <div className="flex flex-col gap-2">
+                   <label className="px-5 py-2 md:px-6 md:py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors text-xs md:text-sm cursor-pointer inline-block w-fit">
+                     {uploading ? "Yuklanmoqda..." : t.settings.uploadImg}
+                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploading} />
+                   </label>
+                   <p className="text-[10px] text-slate-500">JPG, PNG, GIF, WebP</p>
+                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.auth.name}</label>
-                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 md:p-4 text-white focus:border-blue-500 focus:outline-none text-sm md:text-base" />
+                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 md:p-4 text-white focus:border-blue-500 focus:outline-none text-sm md:text-base" placeholder="To'liq ism" />
                 </div>
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Email</label>
-                  <input type="email" defaultValue={`${(formData.name || 'user').split(' ')[0].toLowerCase()}@nexus.uz`} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 md:p-4 text-slate-500 cursor-not-allowed text-sm md:text-base" disabled />
+                  <input type="email" value={formData.email} readOnly className="w-full bg-black/40 border border-white/10 rounded-xl p-3 md:p-4 text-slate-400 cursor-not-allowed text-sm md:text-base" />
+                  <p className="text-[10px] text-slate-500 mt-1">Ro&apos;yxatdan o&apos;tgan email (o&apos;zgartirib bo&apos;lmaydi)</p>
                 </div>
               </div>
               
               <div className="pt-6 border-t border-white/10 flex justify-end">
-                <button onClick={handleSave} className="w-full sm:w-auto btn-premium px-8 py-3.5 bg-blue-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-1 transition-transform">{t.settings.save}</button>
+                <button onClick={handleSave} disabled={saving} className="w-full sm:w-auto btn-premium px-8 py-3.5 bg-blue-500 text-white font-black rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-1 transition-transform disabled:opacity-70">{saving ? "Saqlanmoqda..." : t.settings.save}</button>
               </div>
            </div>
         </div>
@@ -1797,14 +1894,24 @@ const defaultOrganizations = [
   { id: 'ORG-INNO-005', name: "Innovatsiya Vazirligi", region: 'Toshkent' },
 ];
 
+const ALLOWED_PROJECT_EXT = ['.pdf', '.pptx', '.doc', '.docx'];
+const ALLOWED_PROJECT_MIME = ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/vnd.ms-powerpoint', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
 function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifications, notifications, showToast }) {
   const { t } = useContext(LanguageContext);
   const [step, setStep] = useState(1);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [aiResult, setAiResult] = useState(null);
   const [formData, setFormData] = useState({ title: '', problem: '', solution: '', category: 'IT', targetOrgId: '' });
+  const [attachmentFile, setAttachmentFile] = useState(null);
   const [voucherCode, setVoucherCode] = useState('');
   const [organizations, setOrganizations] = useState(defaultOrganizations);
+
+  const validateProjectFile = (file) => {
+    const name = (file.name || '').toLowerCase();
+    const ok = ALLOWED_PROJECT_EXT.some(ext => name.endsWith(ext)) || ALLOWED_PROJECT_MIME.includes(file.type);
+    return ok;
+  };
 
   useEffect(() => {
     api.getOrganizations().then((data) => {
@@ -1837,6 +1944,19 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
 
   const handleSubmit = async () => {
     const targetOrgId = formData.targetOrgId || (organizations[0]?.id) || 'ORG-ITP-001';
+    let attachmentUrl = null;
+    if (attachmentFile) {
+      if (!validateProjectFile(attachmentFile)) {
+        showToast(t.submit.attachHint || "Faqat PDF, PPTX, Word (doc, docx)", "error");
+        return;
+      }
+      try {
+        attachmentUrl = await api.uploadProjectFile(currentUser.id, attachmentFile);
+      } catch (err) {
+        showToast(err.message || "Fayl yuklanmadi", "error");
+        return;
+      }
+    }
     const newProject = { 
       id: Date.now(), 
       orgId: currentUser.orgId, 
@@ -1865,6 +1985,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
         school: currentUser.orgName,
         aiScore: aiResult.totalScore,
         badges: ['Verified'],
+        attachmentUrl: attachmentUrl || undefined,
       });
       setProjects(prev => [saved, ...prev]);
     } catch {
@@ -1907,6 +2028,12 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
                 <label className="block text-xs md:text-sm font-black text-slate-300 mb-2 md:mb-3 uppercase tracking-widest">{t.submit.solution}</label>
                 <textarea className="w-full bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-5 text-white focus:outline-none focus:border-fuchsia-500 transition-all shadow-inner h-32 md:h-48 resize-none font-medium text-sm md:text-base placeholder:text-slate-600" placeholder={t.submit.solutionEx} value={formData.solution} onChange={e => setFormData({...formData, solution: e.target.value})}></textarea>
               </div>
+            </div>
+            <div className="group">
+              <label className="block text-xs md:text-sm font-black text-slate-300 mb-2 md:mb-3 uppercase tracking-widest">{t.submit.attachFile}</label>
+              <input type="file" accept=".pdf,.pptx,.doc,.docx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => { const f = e.target.files?.[0]; if (f && validateProjectFile(f)) setAttachmentFile(f); else if (f) showToast(t.submit.attachHint, "error"); else setAttachmentFile(null); e.target.value = ''; }} className="w-full text-slate-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-white/10 file:text-white file:font-bold file:cursor-pointer" />
+              <p className="text-[10px] text-slate-500 mt-1">{t.submit.attachHint}</p>
+              {attachmentFile && <p className="text-xs text-emerald-400 mt-1 font-bold">{attachmentFile.name}</p>}
             </div>
             <div className="pt-6 md:pt-8 flex flex-col sm:flex-row items-center justify-between border-t border-white/10 gap-4 md:gap-6">
                 <div className="flex items-center gap-3 md:gap-4 px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 w-full sm:w-auto">
