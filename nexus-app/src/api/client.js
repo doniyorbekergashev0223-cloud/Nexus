@@ -18,12 +18,14 @@ async function request(path, options = {}) {
   return data;
 }
 
-/** Supabase public bucket URL da /object/public/ bo‘lishini ta’minlaydi (404 oldini olish). */
+/** Supabase public bucket URL da /object/public/ bo‘lishini ta’minlaydi (404/400 oldini olish). */
 function ensurePublicStorageUrl(url, bucketName) {
   if (!url || typeof url !== 'string') return url;
-  const wrong = `/object/${bucketName}/`;
-  const right = `/object/public/${bucketName}/`;
-  return url.includes(right) ? url : url.replace(wrong, right);
+  const publicSegment = `/object/public/${bucketName}`;
+  if (url.includes(publicSegment)) return url;
+  const wrongSegment = `/object/${bucketName}`;
+  if (url.includes(wrongSegment)) return url.split(wrongSegment).join(publicSegment);
+  return url;
 }
 
 function projectFromRow(r) {
@@ -108,8 +110,16 @@ const apiSupabase = {
   async uploadAvatar(userId, file) {
     const ext = (file.name || '').split('.').pop() || 'jpg';
     const path = `${userId}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type || 'image/jpeg' });
-    if (error) throw new Error(error.message);
+    let contentType = file.type || 'image/jpeg';
+    if (contentType === 'image/jpg') contentType = 'image/jpeg';
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType });
+    if (error) {
+      const msg = error.message || '';
+      if (error.message && (error.message.includes('400') || error.message.toLowerCase().includes('invalid') || error.message.toLowerCase().includes('policy'))) {
+        throw new Error('Rasm yuklanmadi (400). Supabase: Storage → avatars → Public bucket ON, Policies da INSERT (authenticated) va Allowed MIME types da image/jpeg, image/png, image/webp, image/gif bo‘lishi kerak.');
+      }
+      throw new Error(msg || 'Rasm yuklanmadi');
+    }
     const { data } = supabase.storage.from('avatars').getPublicUrl(path);
     return ensurePublicStorageUrl(data.publicUrl, 'avatars');
   },

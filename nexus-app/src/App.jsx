@@ -1738,7 +1738,7 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] flex-shrink-0 overflow-hidden">
                    {showAvatarImg ? (
-                     <img src={avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" onError={() => setAvatarImgError(true)} />
+                     <img src={ensurePublicStorageUrl(avatarDisplayUrl, 'avatars') || avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" crossOrigin="anonymous" referrerPolicy="no-referrer" onError={() => setAvatarImgError(true)} />
                    ) : (
                      <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-xl md:text-2xl font-black text-white">{initials}</div>
                    )}
@@ -2005,13 +2005,18 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
       runAIAnalysis().then((result) => {
         if (result) {
           setAiResult(result);
+          setIsEvaluating(false);
         } else {
-          setTimeout(() => setAiResult(mockAiResult()), 2500);
+          setTimeout(() => {
+            setAiResult(mockAiResult());
+            setIsEvaluating(false);
+          }, 2500);
         }
-        setIsEvaluating(false);
       }).catch(() => {
-        setTimeout(() => setAiResult(mockAiResult()), 2500);
-        setIsEvaluating(false);
+        setTimeout(() => {
+          setAiResult(mockAiResult());
+          setIsEvaluating(false);
+        }, 2500);
       });
     } else {
       setStep(1.5); 
@@ -2022,12 +2027,20 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
     setStep(2);
     setIsEvaluating(true);
     runAIAnalysis().then((result) => {
-      if (result) setAiResult(result);
-      else setTimeout(() => setAiResult(mockAiResult()), 2500);
-      setIsEvaluating(false);
+      if (result) {
+        setAiResult(result);
+        setIsEvaluating(false);
+      } else {
+        setTimeout(() => {
+          setAiResult(mockAiResult());
+          setIsEvaluating(false);
+        }, 2500);
+      }
     }).catch(() => {
-      setTimeout(() => setAiResult(mockAiResult()), 2500);
-      setIsEvaluating(false);
+      setTimeout(() => {
+        setAiResult(mockAiResult());
+        setIsEvaluating(false);
+      }, 2500);
     });
   };
 
@@ -2060,10 +2073,10 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
       phone: phone || "+998 (90) ***-**-**", 
       school: school, 
       status: "Ko'rilmoqda", 
-      aiScore: aiResult.totalScore, 
-      badges: ['Verified'], 
-      date: new Date().toISOString().split('T')[0], 
-      feedback: "" 
+aiScore: aiResult?.totalScore ?? 0,
+      badges: ['Verified'],
+      date: new Date().toISOString().split('T')[0],
+      feedback: ""
     };
     currentUser.freeAttempts = 0;
     try {
@@ -2076,7 +2089,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
         author: authorName,
         phone: phone || undefined,
         school: school,
-        aiScore: aiResult.totalScore,
+        aiScore: aiResult?.totalScore ?? 0,
         badges: ['Verified'],
         attachmentUrl: attachmentUrl || undefined,
       });
@@ -2186,7 +2199,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
 
         ) : (
           <div className="space-y-8 md:space-y-12 relative z-10 slide-up">
-            {isEvaluating ? (
+            {isEvaluating || !aiResult ? (
               <div className="py-16 md:py-24 flex flex-col items-center justify-center text-center slide-up">
                 <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 md:mb-10">
                   <div className="absolute inset-0 rounded-full border-4 border-slate-800 shadow-inner"></div>

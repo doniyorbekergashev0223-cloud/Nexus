@@ -151,11 +151,21 @@ Sozlamalarda avatar va loyiha yuborishda fayl yuklash ishlashi uchun ikkita buck
   - **project-files**: xuddi shunday "New policy" → INSERT, `authenticated`, USING/WITH CHECK: `true` → Save.  
 Agar 400 yoki "new row violates row-level security" chiqsa, bucket nomi aniq `avatars` va `project-files` ekanini va ikkala bucket **Public** ekanini tekshiring.
 
-**Avatar rasm 400 (yuklandi, lekin ko‘rinmayapti):**  
+**Avatar yuklashda 400 (POST — "Rasm yuklanmadi"):**  
+- **Aniq sabab:** Brauzerda **F12** → **Network** → 400 bergan **POST** so‘rovni bosing → **Response** (yoki **Preview**) tabida Supabase qaytgan JSON ni o‘qing. U yerda `message` yoki `error` da yozilgan (masalan "new row violates row-level security policy", "Invalid file type", "File size exceeds limit").  
+- Tekshiring: (1) **Storage** da bucket nomi aniq **avatars**. (2) **Policies** da **INSERT** — Target role **authenticated**, WITH CHECK: `(bucket_id = 'avatars')`. (3) **Configuration** → **Restrict MIME types** yoqilgan bo‘lsa, **Allowed MIME types** da `image/jpeg, image/png, image/webp, image/gif` bo‘lishi kerak (vergul bilan, bo‘sh joysiz yoki bitta bo‘sh joy). (4) **Restrict file size** 10 MB yoki o‘chirilgan. (5) Agar Response da "row-level security" yoki "policy" deyilsa — **Policies** da **INSERT** policy ni qayta yarating: Operation **INSERT**, Target roles **authenticated**, WITH CHECK expression: `(bucket_id = 'avatars'::text)`.
+
+**Avatar rasm 400 (yuklandi, lekin ko‘rinmayapti yoki GET 400):**  
 1. **Storage** → **avatars** bucketini oching.  
-2. **Configuration** (yoki bucket sozlamalari) → **Public bucket** yoqilgan bo‘lishi kerak. Yoqilmagan bo‘lsa yoqing va saqlang.  
-3. **Policies** → **New policy** → "Allow public read" yoki "For full customization" → Operation: **SELECT** (yoki "Allow read"), Target: `public` yoki USING expression: `true` → Save.  
-4. Brauzerda sozlamalarni yangilab (Ctrl+F5), avatar rasmini qayta yuklab ko‘ring.
+2. **Configuration** → **Public bucket** yoqilgan bo‘lishi kerak. Saqlang.  
+3. **Policies** da ikkita policy bo‘lishi kerak: (1) **INSERT** — `authenticated`, (2) **SELECT** — `anon` (yoki "Public read"). SELECT bo‘lmasa brauzer rasmni o‘qiy olmaydi, 400 chiqadi.  
+4. **Configuration** → **Restrict MIME types** yoqilgan bo‘lsa, **Allowed MIME types** da kamida `image/jpeg, image/png, image/webp, image/gif` bo‘lishi kerak.  
+5. Brauzerda **Ctrl+Shift+R** (qattiq yangilash) va sozlamalarda rasmni qayta yuklab ko‘ring.
+
+**Agar baricha ishlamasa:**  
+- Brauzerda **F12** → **Network** tab → rasm yuklanayotganda 400 qaytgan so‘rovni bosing → **Headers** da **Request URL** ni ko‘ring. URL da `/object/public/avatars/` bo‘lishi kerak. Agar `public` yo‘q bo‘lsa, eski deploy yoki keshlangan sahifa — qattiq yangilang yoki boshqa brauzerda sinab ko‘ring.  
+- Supabase **Storage** → **avatars** → bitta faylni oching → **Get URL** (yoki public link) ni nusxalab yangi tabda oching. Agar bu link ham 400 bersa, muammo bucket/public sozlamada — bucket nomi aniq **avatars** (katta-kichik harf), **Public bucket** ON, va **Policies** da anon uchun **SELECT** policy bor-yo‘qligini qayta tekshiring.  
+- Yangi bucket sinash: **Storage** → **New bucket** → nomi **avatars2**, **Public** → **Policies** da INSERT (authenticated) va SELECT (anon) qo‘shing. Keyin kodda vaqtincha `avatars` o‘rniga `avatars2` ishlatib ko‘ring (faqat tekshirish uchun).
 
 **Agar jadvallar allaqachon yaratilgan bo‘lsa**, faqat yangi ustunlar qo‘shish uchun SQL Editor da:
 
