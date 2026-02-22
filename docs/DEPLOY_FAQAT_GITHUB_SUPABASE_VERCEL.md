@@ -219,6 +219,11 @@ Agar platformada **Supabase Auth** (email/parol) ishlatilsa, "Parolni unutdingiz
 3. **Email Templates** (ixtiyoriy)  
    - **Reset password** shablonini matn/til bo‘yicha tahrirlashingiz mumkin.
 
+**Agar parol tiklashda 500 xatosi chiqsa:**  
+- **Site URL** ni **localhost** emas, balki production manzilga o‘rnating: `https://nexus-delta-olive.vercel.app` (yoki o‘z domeningiz).  
+- **Redirect URLs** ro‘yxatida aniq shu manzil va hash bo‘lsin: `https://nexus-delta-olive.vercel.app/#reset-password`.  
+- Saqlang va emaildagi parol tiklash havolasini qayta so‘rab, yangi link orqali urinib ko‘ring.
+
 ### 5.2 Ilovada nima qilingan
 
 - **Kirish** modali ichida "Parolni unutdingizmi?" linki bor.  

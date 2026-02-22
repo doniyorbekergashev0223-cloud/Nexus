@@ -459,9 +459,10 @@ export default function App() {
       const meta = user.user_metadata || {};
       let pending = null;
       try {
-        const raw = sessionStorage.getItem('nexus_oauth_pending_profile');
+        const raw = localStorage.getItem('nexus_oauth_pending_profile') || sessionStorage.getItem('nexus_oauth_pending_profile');
         if (raw) {
           pending = JSON.parse(raw);
+          localStorage.removeItem('nexus_oauth_pending_profile');
           sessionStorage.removeItem('nexus_oauth_pending_profile');
         }
       } catch (_) {}
@@ -607,9 +608,15 @@ function ResetPasswordPage({ showToast, onDone }) {
       setHasSession(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => {
-      setHasSession(!!data?.session);
-    }).catch(() => setHasSession(false));
+    supabase.auth.getSession()
+      .then(({ data }) => {
+        setHasSession(!!data?.session);
+      })
+      .catch(() => setHasSession(false));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setHasSession(true);
+    });
+    return () => subscription?.unsubscribe();
   }, []);
 
   const handleSubmit = async (e) => {
@@ -658,7 +665,7 @@ function ResetPasswordPage({ showToast, onDone }) {
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="premium-glass rounded-2xl p-8 border border-white/10 max-w-md text-center">
           <p className="text-slate-300 mb-6">{t.auth.forgotOnlySupabase}</p>
-          <p className="text-slate-500 text-sm mb-6">Havola orqali kelsangiz, Supabase ulangan va Email provider yoqilgan bo‘lishi kerak.</p>
+          <p className="text-slate-500 text-sm mb-6">Havola orqali kelsangiz, Supabase ulangan va Email provider yoqilgan bo‘lishi kerak. 500 xatosi bo‘lsa, Supabase → Authentication → URL Configuration da Site URL va Redirect URLs ni production manzilingizga o‘rnating.</p>
           <button type="button" onClick={() => { window.location.hash = ''; onDone(); }} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-colors">
             {t.auth.backToLogin}
           </button>
@@ -807,11 +814,13 @@ function LandingPage({ onLoginSuccess, showToast }) {
     if (isGoogle && supabase) {
       if (authMode === 'register') {
         try {
-          sessionStorage.setItem('nexus_oauth_pending_profile', JSON.stringify({
+          const payload = JSON.stringify({
             role: authForm.role,
             region: authForm.region || 'Toshkent',
             school: authForm.school || '',
-          }));
+          });
+          localStorage.setItem('nexus_oauth_pending_profile', payload);
+          sessionStorage.setItem('nexus_oauth_pending_profile', payload);
         } catch (_) {}
       }
       const redirectTo = `${window.location.origin}${window.location.pathname || ''}`;
@@ -1658,6 +1667,11 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [avatarImgError, setAvatarImgError] = useState(false);
+
+  const initials = (formData.name || 'U').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
+  const avatarDisplayUrl = formData.avatarUrl || currentUser.avatarUrl;
+  const showAvatarImg = avatarDisplayUrl && !avatarImgError;
 
   useEffect(() => {
     setFormData({
@@ -1667,11 +1681,6 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
     });
   }, [currentUser.id, currentUser.name, currentUser.email, currentUser.avatarUrl]);
   useEffect(() => { setAvatarImgError(false); }, [avatarDisplayUrl]);
-
-  const initials = (formData.name || 'U').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
-  const avatarDisplayUrl = formData.avatarUrl || currentUser.avatarUrl;
-  const [avatarImgError, setAvatarImgError] = useState(false);
-  const showAvatarImg = avatarDisplayUrl && !avatarImgError;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
