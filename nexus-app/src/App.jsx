@@ -116,7 +116,7 @@ function mapProfileToCurrentUser(user, profile) {
     plan: plan === 'free' ? 'free' : plan === 'pro' ? 'pro' : 'enterprise',
     orgName: profile?.org_name || profile?.school || '',
     freeAttempts: plan === 'free' ? 1 : 0,
-    avatarUrl: (profile?.avatar_url && ensurePublicStorageUrl(profile.avatar_url, 'avatars')) || null,
+    avatarUrl: (profile?.avatar_url?.startsWith?.('nexus_3d:')) ? profile.avatar_url : (profile?.avatar_url && ensurePublicStorageUrl(profile.avatar_url, 'avatars')) || null,
   };
 }
 
@@ -237,6 +237,62 @@ const partnersList = [
   { name: "Xalq Ta'limi Vazirligi", icon: <BookOpen className="w-6 h-6 md:w-8 md:h-8 text-emerald-300" /> },
   { name: "O'zbekiston Hokimiyati", icon: <Landmark className="w-6 h-6 md:w-8 md:h-8 text-amber-200" /> },
 ];
+
+// --- 3D AVATARS (DiceBear 9.x — erkak / ayol, cache’da tanlangan saqlanadi) ---
+const AVATAR_3D_PREFIX = 'nexus_3d:';
+const AVATAR_3D_MALE = ['male_1', 'male_2', 'male_3', 'male_4', 'male_5', 'male_6'];
+const AVATAR_3D_FEMALE = ['female_1', 'female_2', 'female_3', 'female_4', 'female_5', 'female_6'];
+const AVATAR_3D_CACHE_KEY = 'nexus_avatar_3d';
+
+function getAvatar3DUrl(avatarId) {
+  if (!avatarId) return null;
+  return `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(avatarId)}`;
+}
+
+function resolveAvatarDisplay(avatarUrl) {
+  if (avatarUrl?.startsWith(AVATAR_3D_PREFIX)) {
+    const id = avatarUrl.slice(AVATAR_3D_PREFIX.length);
+    return { type: '3d', url: getAvatar3DUrl(id) };
+  }
+  if (avatarUrl) return { type: 'image', url: avatarUrl };
+  return null;
+}
+
+function Avatar3DPickerModal({ onSelect, onClose, currentId }) {
+  return (
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
+      <div className="relative w-full max-w-lg premium-glass rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-2xl border border-white/10 z-10 slide-up" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg md:text-xl font-black text-white">3D avatar tanlash</h3>
+          <button type="button" onClick={onClose} className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="space-y-6">
+          <div>
+            <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3">Erkak</p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {AVATAR_3D_MALE.map(id => (
+                <button key={id} type="button" onClick={() => onSelect(id)} className={`aspect-square rounded-xl overflow-hidden border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 ${currentId === id ? 'border-fuchsia-500 ring-2 ring-fuchsia-500/50' : 'border-white/10 hover:border-white/30'}`}>
+                  <img src={getAvatar3DUrl(id)} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-bold text-fuchsia-400 uppercase tracking-widest mb-3">Ayol</p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {AVATAR_3D_FEMALE.map(id => (
+                <button key={id} type="button" onClick={() => onSelect(id)} className={`aspect-square rounded-xl overflow-hidden border-2 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-fuchsia-400 ${currentId === id ? 'border-fuchsia-500 ring-2 ring-fuchsia-500/50' : 'border-white/10 hover:border-white/30'}`}>
+                  <img src={getAvatar3DUrl(id)} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // --- GLOBAL COMPONENTS ---
 const Toast = ({ message, type, onClose }) => {
@@ -439,8 +495,8 @@ export default function App() {
   const [showResetPassword, setShowResetPassword] = useState(() => typeof window !== 'undefined' && window.location.hash.includes('reset-password'));
   
   const [currentUser, setCurrentUser] = useState(null); 
-  const [projects, setProjects] = useState(initialProjects);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [projects, setProjects] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     const onHash = () => setShowResetPassword(typeof window !== 'undefined' && window.location.hash.includes('reset-password'));
@@ -537,13 +593,16 @@ export default function App() {
   };
 
   const updateProjectStatus = (projectId, newStatus, feedbackText) => {
-    api.updateProject(projectId, { status: newStatus, feedback: feedbackText, orgId: currentUser?.orgId })
+    const project = projects.find(p => p.id === projectId);
+    api.updateProject(projectId, { status: newStatus, feedback: feedbackText })
       .then(() => {
-        setProjects(projects.map(p => p.id === projectId ? { ...p, status: newStatus, feedback: feedbackText } : p));
-        const newNotif = { id: Date.now(), orgId: currentUser.orgId, type: newStatus === 'Qabul qilindi' ? 'success' : 'warning', text: `Loyiha holati o'zgardi: ${newStatus}.`, time: 'Hozirgina', unread: true };
-        setNotifications([newNotif, ...notifications]);
-        showToast(`Loyiha holati yangilandi!`, 'success');
+        setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus, feedback: feedbackText } : p));
+        const text = newStatus === 'Qabul qilindi' ? `Loyihangiz qabul qilindi. ${(feedbackText || '').slice(0, 80)}` : `Loyihangiz rad etildi. ${(feedbackText || '').slice(0, 80)}`;
+        return api.createNotification({ orgId: project?.orgId, type: newStatus === 'Qabul qilindi' ? 'success' : 'warning', text }).then(() => {
+          if (project?.orgId === currentUser?.orgId) setNotifications(prev => [{ id: Date.now(), orgId: project.orgId, type: newStatus === 'Qabul qilindi' ? 'success' : 'warning', text, time: 'Hozirgina', unread: true }, ...prev]);
+        });
       })
+      .then(() => showToast(`Loyiha holati yangilandi!`, 'success'))
       .catch((err) => showToast(err.message || 'Xatolik', 'error'));
   };
 
@@ -1320,10 +1379,12 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
                 <p className="text-sm font-black text-white group-hover:text-blue-300 transition-colors">{currentUser.name}</p>
                 <p className="text-[11px] text-slate-400 font-bold mt-0.5">{currentUser.role.toUpperCase()}</p>
               </div>
-              <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] shadow-lg group-hover:shadow-fuchsia-500/50 transition-shadow">
-                <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-white font-bold text-xs md:text-sm">
-                  {currentUser.name.split(' ').map(n=>n[0]).join('')}
-                </div>
+              <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] shadow-lg group-hover:shadow-fuchsia-500/50 transition-shadow overflow-hidden">
+                {(() => {
+                  const u = resolveAvatarDisplay(currentUser.avatarUrl);
+                  const src = u?.type === '3d' ? u.url : (u?.type === 'image' ? (ensurePublicStorageUrl(u.url, 'avatars') || u.url) : null);
+                  return src ? <img src={src} alt="" className="w-full h-full rounded-full object-cover" /> : <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-white font-bold text-xs md:text-sm">{currentUser.name.split(' ').map(n=>n[0]).join('')}</div>;
+                })()}
               </div>
             </div>
           </div>
@@ -1666,46 +1727,34 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
     avatarUrl: currentUser.avatarUrl || null,
   });
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [avatarImgError, setAvatarImgError] = useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   const initials = (formData.name || 'U').trim().split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase() || 'U';
   const avatarDisplayUrl = formData.avatarUrl || currentUser.avatarUrl;
-  const showAvatarImg = avatarDisplayUrl && !avatarImgError;
+  const resolvedAvatar = resolveAvatarDisplay(avatarDisplayUrl);
+  const showAvatarImg = resolvedAvatar && (resolvedAvatar.type !== 'image' || !avatarImgError);
 
   useEffect(() => {
+    let avatarUrl = currentUser.avatarUrl || null;
+    if (!avatarUrl && typeof window !== 'undefined') {
+      const cached = localStorage.getItem(AVATAR_3D_CACHE_KEY);
+      if (cached) avatarUrl = AVATAR_3D_PREFIX + cached;
+    }
     setFormData({
       name: currentUser.name || '',
       email: currentUser.email || '',
-      avatarUrl: currentUser.avatarUrl || null,
+      avatarUrl,
     });
   }, [currentUser.id, currentUser.name, currentUser.email, currentUser.avatarUrl]);
   useEffect(() => { setAvatarImgError(false); }, [avatarDisplayUrl]);
 
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith('image/')) {
-      showToast("Rasm faylini tanlang (jpg, png, gif, webp)", "warning");
-      return;
-    }
-    if (!supabase || !currentUser?.id) return;
-    setUploading(true);
-    try {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Rasm 5 MB dan oshmasin", "warning");
-        setUploading(false);
-        e.target.value = '';
-        return;
-      }
-      const url = await api.uploadAvatar(currentUser.id, file);
-      setFormData(prev => ({ ...prev, avatarUrl: url }));
-      setAvatarImgError(false);
-      showToast("Rasm yuklandi. Saqlash tugmasini bosing.", "success");
-    } catch (err) {
-      showToast(err.message || "Rasm yuklanmadi", "error");
-    }
-    setUploading(false);
-    e.target.value = '';
+  const handleSelect3DAvatar = (avatarId) => {
+    const value = AVATAR_3D_PREFIX + avatarId;
+    setFormData(prev => ({ ...prev, avatarUrl: value }));
+    try { localStorage.setItem(AVATAR_3D_CACHE_KEY, avatarId); } catch (_) {}
+    setShowAvatarPicker(false);
+    showToast("Avatar tanlandi. Saqlash tugmasini bosing.", "success");
   };
 
   const handleSave = async () => {
@@ -1736,20 +1785,26 @@ function SettingsPanel({ currentUser, showToast, refreshUser }) {
            <h3 className="text-lg md:text-xl font-black text-white mb-6 border-b border-white/10 pb-4">{t.settings.editProfile}</h3>
            <div className="space-y-6">
               <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center">
-                 <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] flex-shrink-0 overflow-hidden">
-                   {showAvatarImg ? (
-                     <img src={ensurePublicStorageUrl(avatarDisplayUrl, 'avatars') || avatarDisplayUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" crossOrigin="anonymous" referrerPolicy="no-referrer" onError={() => setAvatarImgError(true)} />
+                 <button type="button" onClick={() => setShowAvatarPicker(true)} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] flex-shrink-0 overflow-hidden hover:ring-2 hover:ring-fuchsia-400/50 transition-all focus:outline-none focus:ring-2 focus:ring-fuchsia-400">
+                   {showAvatarImg && resolvedAvatar?.url ? (
+                     <img src={resolvedAvatar.type === '3d' ? resolvedAvatar.url : (ensurePublicStorageUrl(resolvedAvatar.url, 'avatars') || resolvedAvatar.url)} alt="Avatar" className="w-full h-full rounded-full object-cover" crossOrigin="anonymous" referrerPolicy="no-referrer" onError={() => setAvatarImgError(true)} />
                    ) : (
                      <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-xl md:text-2xl font-black text-white">{initials}</div>
                    )}
-                 </div>
+                 </button>
                  <div className="flex flex-col gap-2">
-                   <label className="px-5 py-2 md:px-6 md:py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors text-xs md:text-sm cursor-pointer inline-block w-fit">
-                     {uploading ? "Yuklanmoqda..." : t.settings.uploadImg}
-                     <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} disabled={uploading} />
-                   </label>
-                   <p className="text-[10px] text-slate-500">JPG, PNG, GIF, WebP</p>
+                   <button type="button" onClick={() => setShowAvatarPicker(true)} className="px-5 py-2 md:px-6 md:py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-colors text-xs md:text-sm w-fit">
+                     3D avatar tanlash
+                   </button>
+                   <p className="text-[10px] text-slate-500">Erkak yoki ayol avataridan birini tanlang</p>
                  </div>
+                 {showAvatarPicker && (
+                   <Avatar3DPickerModal
+                     onSelect={handleSelect3DAvatar}
+                     onClose={() => setShowAvatarPicker(false)}
+                     currentId={avatarDisplayUrl?.startsWith?.(AVATAR_3D_PREFIX) ? avatarDisplayUrl.slice(AVATAR_3D_PREFIX.length) : null}
+                   />
+                 )}
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -2094,10 +2149,12 @@ aiScore: aiResult?.totalScore ?? 0,
         attachmentUrl: attachmentUrl || undefined,
       });
       setProjects(prev => [saved, ...prev]);
+      await api.createNotification({ orgId: targetOrgId, type: 'info', text: `Yangi loyiha: ${formData.title}` }).catch(() => {});
+      await api.createNotification({ orgId: currentUser.orgId, type: 'info', text: `Yangi loyiha yuborildi.` }).catch(() => {});
     } catch {
       setProjects(prev => [newProject, ...prev]);
     }
-    setNotifications([{ id: Date.now() + 1, orgId: currentUser.orgId, type: "info", text: `Yangi loyiha yuborildi.`, time: "Hozirgina", unread: true }, ...notifications]);
+    setNotifications(prev => [{ id: Date.now() + 1, orgId: currentUser.orgId, type: "info", text: `Yangi loyiha yuborildi.`, time: "Hozirgina", unread: true }, ...prev]);
     showToast("Loyiha muvaffaqiyatli yuborildi!", "success");
     setActiveTab('projects');
   };
@@ -2332,7 +2389,7 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
                 <div>
                   <h3 className="text-xs md:text-sm font-black text-blue-400 uppercase tracking-widest mb-3 md:mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4"/> {t.modal.problem}</h3>
                   <div className="bg-white/5 p-5 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/5 text-slate-300 leading-relaxed font-medium shadow-inner text-sm md:text-base">
-                    Ushbu loyiha qishloq hududlarida kuzatilayotgan texnologik tafovvutlarni va suvni tejash muammolarini yechishga qaratilgan. Hozirda ekin maydonlarida ortiqcha suv sarfi nafaqat iqtisodiy, balki ekologik zarar keltirmoqda.
+                    {project.problem || "Muammo tavsifi kiritilmagan."}
                   </div>
                 </div>
 
@@ -2349,7 +2406,7 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
                   ) : (
                     <div className="bg-blue-500/5 p-5 md:p-8 rounded-[1.2rem] md:rounded-[1.5rem] border border-blue-500/20 text-slate-300 leading-relaxed font-medium relative overflow-hidden shadow-inner text-sm md:text-base">
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] rotate-[-20deg]"><span className="text-3xl md:text-6xl lg:text-8xl font-black whitespace-nowrap tracking-tighter">NEXUS IP PROTECTED</span></div>
-                      Bizning MVP quyidagi arxitekturada ishlaydi: IoT sensorlar orqali namlikni aniqlab, markaziy AI serverga ma'lumot uzatadi. Suv taqsimoti sun'iy intellekt tomonidan tahlil qilinib, ortiqcha sug'orishni oldi olinadi va suv sarfi kamida 40% ga tejaladi... 
+                      {project.solution || "Innovatsion yechim tavsifi kiritilmagan."}
                       {needsNDA && project.status === "Ko'rilmoqda" && (<div className="mt-4 md:mt-6 p-3 md:p-4 bg-black/30 rounded-lg md:rounded-xl border border-white/5 text-[10px] md:text-sm text-blue-300 font-bold">✅ Tashkilot NDA kelishuvini qabul qildi, batafsil biznes-reja ochildi.</div>)}
                     </div>
                   )}
@@ -2360,8 +2417,8 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
                     <h3 className="text-xs md:text-sm font-black text-white uppercase tracking-widest mb-3 md:mb-4 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-blue-400" /> {t.modal.expertFeedback}</h3>
                     <textarea className="w-full bg-black/40 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-5 text-white focus:outline-none focus:border-blue-500 transition-all shadow-inner h-24 md:h-32 resize-none font-medium text-xs md:text-sm placeholder:text-slate-500" placeholder="Loyiha bo'yicha fikringiz va o'quvchi uchun keyingi qadamlarni yozing..." value={feedbackText} onChange={e => setFeedbackText(e.target.value)}></textarea>
                     <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-4 md:mt-6">
-                      <button onClick={() => updateProjectStatus('Qabul qilindi', feedbackText)} className="flex-1 btn-premium py-3 md:py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-black flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 text-sm md:text-base"><CheckCircle className="w-4 h-4 md:w-5 h-5" /> {t.modal.accept}</button>
-                      <button onClick={() => updateProjectStatus('Rad etildi', feedbackText)} className="flex-1 btn-premium py-3 md:py-4 bg-gradient-to-r from-red-600 to-rose-500 text-white rounded-xl font-black flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 text-sm md:text-base"><AlertTriangle className="w-4 h-4 md:w-5 h-5" /> {t.modal.reject}</button>
+                      <button onClick={() => updateProjectStatus(project.id, 'Qabul qilindi', feedbackText)} className="flex-1 btn-premium py-3 md:py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-black flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 text-sm md:text-base"><CheckCircle className="w-4 h-4 md:w-5 h-5" /> {t.modal.accept}</button>
+                      <button onClick={() => updateProjectStatus(project.id, 'Rad etildi', feedbackText)} className="flex-1 btn-premium py-3 md:py-4 bg-gradient-to-r from-red-600 to-rose-500 text-white rounded-xl font-black flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 text-sm md:text-base"><AlertTriangle className="w-4 h-4 md:w-5 h-5" /> {t.modal.reject}</button>
                     </div>
                   </div>
                 )}
