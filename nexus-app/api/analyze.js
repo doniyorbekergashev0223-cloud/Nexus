@@ -3,6 +3,8 @@
  * So‘rov: POST, body: { title, problem, solution }
  * Javob: { totalScore, problemValidity, innovation, impact, market, feasibility }
  * Muhit: GEMINI_API_KEY (Vercel Environment Variables)
+ * Eslatma: Kalit serverless dan ishlatiladi — Google Cloud/AI Studio da API key da
+ * "Application restrictions" = None qiling (HTTP referrer qo‘ymang), aks holda 403/502.
  */
 
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -71,7 +73,17 @@ Qoidalar: problemValidity - muammoning dolzarbligi (max 25), innovation - innova
     if (!response.ok) {
       const errText = await response.text();
       console.error('Gemini API error', response.status, errText);
-      return res.status(502).json({ error: 'Gemini request failed', fallback: true });
+      let detail = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        detail = errJson?.error?.message || errJson?.message || errText;
+      } catch (_) {}
+      return res.status(502).json({
+        error: 'Gemini request failed',
+        fallback: true,
+        detail: detail.slice(0, 300),
+        status: response.status,
+      });
     }
 
     const data = await response.json();

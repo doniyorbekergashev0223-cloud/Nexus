@@ -926,7 +926,8 @@ function LandingPage({ onLoginSuccess, showToast }) {
     if (!email) return;
     setIsLoggingIn(true);
     try {
-      const redirectTo = `${window.location.origin}${window.location.pathname || ''}#reset-password`;
+      const base = `${window.location.origin}${window.location.pathname || '/'}`.replace(/\/+$/, '') + '/';
+      const redirectTo = `${base}#reset-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       setIsLoggingIn(false);
       if (error) {
