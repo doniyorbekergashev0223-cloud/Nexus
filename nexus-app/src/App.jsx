@@ -653,7 +653,7 @@ export default function App() {
   );
 }
 
-// --- RESET PASSWORD PAGE (Supabase recovery link) ---
+// --- RESET PASSWORD PAGE (Supabase recovery: email link olovi saytga, verifyOtp orqali sessiya) ---
 function ResetPasswordPage({ showToast, onDone }) {
   const { t } = useContext(LanguageContext);
   const [password, setPassword] = useState('');
@@ -661,12 +661,39 @@ function ResetPasswordPage({ showToast, onDone }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [hasSession, setHasSession] = useState(null);
+  const [verifying, setVerifying] = useState(true);
 
   useEffect(() => {
     if (!supabase) {
       setHasSession(false);
+      setVerifying(false);
       return;
     }
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams((window.location.hash || '').split('?')[1] || '');
+    const tokenHash = params.get('token_hash') || hashParams.get('token_hash');
+    const type = params.get('type') || hashParams.get('type');
+
+    if (tokenHash && type === 'recovery') {
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+        .then(({ data, error }) => {
+          setVerifying(false);
+          if (error) {
+            showToast(error.message || 'Havola amal qilmedi yoki muddati tugagan.', 'warning');
+            setHasSession(false);
+            return;
+          }
+          setHasSession(!!data?.session);
+          window.history.replaceState(null, '', window.location.origin + window.location.pathname + '#reset-password');
+        })
+        .catch(() => {
+          setVerifying(false);
+          setHasSession(false);
+        });
+      return;
+    }
+
+    setVerifying(false);
     supabase.auth.getSession()
       .then(({ data }) => {
         setHasSession(!!data?.session);
@@ -709,12 +736,12 @@ function ResetPasswordPage({ showToast, onDone }) {
     }
   };
 
-  if (hasSession === null) {
+  if (hasSession === null || verifying) {
     return (
       <div className="flex flex-1 items-center justify-center p-8">
         <div className="premium-glass rounded-2xl p-8 border border-white/10 flex items-center gap-4">
           <Loader className="w-8 h-8 animate-spin text-blue-400" />
-          <span className="text-white font-bold">Yuklanmoqda...</span>
+          <span className="text-white font-bold">{verifying ? 'Havola tekshirilmoqda...' : 'Yuklanmoqda...'}</span>
         </div>
       </div>
     );
@@ -926,8 +953,10 @@ function LandingPage({ onLoginSuccess, showToast }) {
     if (!email) return;
     setIsLoggingIn(true);
     try {
-      const base = `${window.location.origin}${window.location.pathname || '/'}`.replace(/\/+$/, '') + '/';
-      const redirectTo = `${base}#reset-password`;
+      const origin = window.location.origin;
+      const redirectTo = origin === 'https://nexus-delta-olive.vercel.app'
+        ? 'https://nexus-delta-olive.vercel.app/#reset-password'
+        : `${origin}${(window.location.pathname || '/').replace(/\/+$/, '') || '/'}#reset-password`;
       const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
       setIsLoggingIn(false);
       if (error) {
