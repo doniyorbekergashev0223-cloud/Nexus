@@ -23,7 +23,7 @@ const translations = {
     hero: { badge: "AI Premium Tahlil V2", title1: "Iste'dodlar hamma joyda,", title2: "imkoniyatlar ham shunday bo'lishi kerak.", desc: "Rivojlanayotgan hududlardagi iqtidorlar va yirik investorlar o'rtasidagi raqamli ko'prik. G'oyangizni bepul baholang va MVP ga aylantiring.", startFree: "Bepul boshlash", video: "Video qo'llanma" },
     stats: { users: "Foydalanuvchilar", startups: "Startaplar", orgs: "Tashkilotlar", regions: "Hududlar" },
     dashboard: { title: "Tashkilot Paneli", titleStudent: "Mening Panelim", desc: "Umumiy statistika va AI tahlil xulosalari", descStudent: "Yuborilgan loyihalaringiz va ularning holati", totalUsers: "Foydalanuvchilar", received: "Kelib Tushgan", sent: "Yuborilgan", rejected: "Rad Etilgan", approved: "Qabul Qilingan", growth: "Loyihalar dinamikasi", statusDist: "Loyiha holati" },
-    submit: { title: "Yangi loyiha yaratish", desc: "G'oyangizni kiriting. Bizning AI Premium tizimimiz uni avtomatik baholaydi.", projName: "Loyiha Nomi", problem: "Muammo", solution: "Yechim (MVP)", ip: "IP Himoyalangan", next: "Keyingi qadam", selectOrg: "Loyihani yuborish tashkiloti", attachFile: "Loyiha fayli (ixtiyoriy)", attachHint: "Faqat PDF, PPTX, Word (doc, docx)", ownerSection: "Loyiha egasi ma'lumotlari", ownerName: "To'liq ism (muallif)", ownerPhone: "Telefon raqam", ownerSchool: "Maktab / Tashkilot",
+    submit: { title: "Yangi loyiha yaratish", desc: "G'oyangizni kiriting. Bizning AI Premium tizimimiz uni avtomatik baholaydi.", projName: "Loyiha Nomi", problem: "Muammo", solution: "Yechim (MVP)", ip: "IP Himoyalangan", next: "Keyingi qadam", selectOrg: "Loyihani yuborish tashkiloti", attachFile: "Loyiha fayli (ixtiyoriy)", attachHint: "Faqat PDF, PPTX, Word (doc, docx)", ownerSection: "Loyiha egasi ma'lumotlari", ownerName: "To'liq ism (muallif)", ownerPhone: "Telefon raqam", ownerEmail: "Email manzil", ownerSchool: "Maktab / Tashkilot",
       projNameEx: "Masalan: SmartAgro - Suvni tejash tizimi",
       problemEx: "Masalan: Qishloq xo'jaligida eski usullar sababli suvning 40% ortiqcha isrof bo'lishi va ekinlarning vaqtida sug'orilmasligi.",
       solutionEx: "Masalan: IoT datchiklar orqali tuproq namligini aniqlab, avtomatik ravishda sug'orishni yo'lga qo'yuvchi arzon AI platforma.",
@@ -50,7 +50,7 @@ const translations = {
     hero: { badge: "AI Premium Анализ V2", title1: "Таланты есть везде,", title2: "возможности тоже должны быть такими.", desc: "Цифровой мост между талантами в развивающихся регионах и крупными инвесторами. Оцените свою идею бесплатно и превратите в MVP.", startFree: "Начать бесплатно", video: "Видеоинструкция" },
     stats: { users: "Пользователи", startups: "Стартапы", orgs: "Организации", regions: "Регионы" },
     dashboard: { title: "Панель Организации", titleStudent: "Моя Панель", desc: "Общая статистика и выводы AI анализа", descStudent: "Ваши отправленные проекты и их статус", totalUsers: "Пользователи", received: "Поступило", sent: "Отправлено", rejected: "Отклонено", approved: "Одобрено", growth: "Динамика проектов", statusDist: "Статус проектов" },
-    submit: { title: "Создать новый проект", desc: "Введите вашу идею. Наша система AI Premium автоматически оценит ее.", projName: "Название проекта", problem: "Проблема", solution: "Решение (MVP)", ip: "IP Защищено", next: "Следующий шаг", selectOrg: "Организация для отправки", attachFile: "Файл проекта (необязательно)", attachHint: "Только PDF, PPTX, Word (doc, docx)", ownerSection: "Данные владельца проекта", ownerName: "Полное имя (автор)", ownerPhone: "Номер телефона", ownerSchool: "Школа / Организация",
+    submit: { title: "Создать новый проект", desc: "Введите вашу идею. Наша система AI Premium автоматически оценит ее.", projName: "Название проекта", problem: "Проблема", solution: "Решение (MVP)", ip: "IP Защищено", next: "Следующий шаг", selectOrg: "Организация для отправки", attachFile: "Файл проекта (необязательно)", attachHint: "Только PDF, PPTX, Word (doc, docx)", ownerSection: "Данные владельца проекта", ownerName: "Полное имя (автор)", ownerPhone: "Номер телефона", ownerEmail: "Email адрес", ownerSchool: "Школа / Организация",
       projNameEx: "Например: SmartAgro - Система экономии воды",
       problemEx: "Например: 40% воды тратится впустую в сельском хозяйстве из-за устаревших методов полива...",
       solutionEx: "Например: Дешевая платформа ИИ, измеряющая влажность почвы с помощью датчиков IoT...",
@@ -77,7 +77,7 @@ const translations = {
     hero: { badge: "AI Premium Analysis V2", title1: "Talent is everywhere,", title2: "opportunities should be too.", desc: "A digital bridge between talents in developing regions and major investors. Evaluate your idea for free and turn it into an MVP.", startFree: "Start for free", video: "Video Tutorial" },
     stats: { users: "Users", startups: "Startups", orgs: "Organizations", regions: "Regions" },
     dashboard: { title: "Organization Panel", titleStudent: "My Dashboard", desc: "General statistics and AI analysis insights", descStudent: "Your submitted projects and their status", totalUsers: "Total Users", received: "Received", sent: "Sent", rejected: "Rejected", approved: "Approved", growth: "Project Dynamics", statusDist: "Project Status" },
-    submit: { title: "Create New Project", desc: "Enter your idea. Our AI Premium system will automatically evaluate it.", projName: "Project Name", problem: "Problem", solution: "Solution (MVP)", ip: "IP Protected", next: "Next Step", selectOrg: "Send project to organization", attachFile: "Project file (optional)", attachHint: "Only PDF, PPTX, Word (doc, docx)", ownerSection: "Project owner details", ownerName: "Full name (author)", ownerPhone: "Phone number", ownerSchool: "School / Organization",
+    submit: { title: "Create New Project", desc: "Enter your idea. Our AI Premium system will automatically evaluate it.", projName: "Project Name", problem: "Problem", solution: "Solution (MVP)", ip: "IP Protected", next: "Next Step", selectOrg: "Send project to organization", attachFile: "Project file (optional)", attachHint: "Only PDF, PPTX, Word (doc, docx)", ownerSection: "Project owner details", ownerName: "Full name (author)", ownerPhone: "Phone number", ownerEmail: "Email address", ownerSchool: "School / Organization",
       projNameEx: "Example: SmartAgro - Water saving system",
       problemEx: "Example: 40% of water is wasted in agriculture due to outdated irrigation methods...",
       solutionEx: "Example: A cheap AI platform that measures soil moisture via IoT sensors and automates watering.",
@@ -208,9 +208,9 @@ const kpiRegionData = [{ hudud: 'Jizzax', aktivlik: 85 }, { hudud: 'Toshkent', a
 const pieData = [{ name: 'Qabul qilindi', value: 45, color: '#10B981' }, { name: 'Rad etildi', value: 20, color: '#EF4444' }, { name: "Ko'rilmoqda", value: 35, color: '#3b82f6' }];
 
 const initialProjects = [
-  { id: 1, orgId: 'ORG-SCH-007', targetOrgId: 'ORG-ITP-001', title: "AgroSmart - Qishloq xo'jaligida suvni tejash", author: "Aziz Rahimov", phone: "+998 (90) 123-45-67", school: "7-sonli maktab", status: "Qabul qilindi", aiScore: 92, badges: ['Star Project', 'EXPERT_APPROVED'], date: "2024-05-12", feedback: "Dolzarb muammo ko'tarilgan. Moliyalashtirishga tayyormiz." },
-  { id: 2, orgId: 'ORG-SCH-007', targetOrgId: 'ORG-ITP-001', title: "EduVR - Virtual laboratoriya", author: "Malika Tohirova", phone: "+998 (99) 987-65-43", school: "IT Texnikum", status: "Rad etildi", aiScore: 42, badges: ['Draft'], date: "2024-05-18", feedback: "Amalga oshirish qiymati qimmat. Qayta ishlanishi kerak." },
-  { id: 3, orgId: 'ORG-SCH-012', targetOrgId: 'ORG-ITP-001', title: "EcoDrone - Yong'inni aniqlash", author: "Sardor Rustamov", phone: "+998 (93) 321-76-54", school: "Prezident maktabi", status: "Ko'rilmoqda", aiScore: 78, badges: ['Verified'], date: "2024-06-02", feedback: "" }
+  { id: 1, orgId: 'ORG-SCH-007', targetOrgId: 'ORG-ITP-001', title: "AgroSmart - Qishloq xo'jaligida suvni tejash", author: "Aziz Rahimov", phone: "+998 (90) 123-45-67", email: "azizrahimov@gmail.com", school: "7-sonli maktab", status: "Qabul qilindi", aiScore: 92, badges: ['Star Project', 'EXPERT_APPROVED'], date: "2024-05-12", feedback: "Dolzarb muammo ko'tarilgan. Moliyalashtirishga tayyormiz." },
+  { id: 2, orgId: 'ORG-SCH-007', targetOrgId: 'ORG-ITP-001', title: "EduVR - Virtual laboratoriya", author: "Malika Tohirova", phone: "+998 (99) 987-65-43", email: "malika.tohirova@mail.ru", school: "IT Texnikum", status: "Rad etildi", aiScore: 42, badges: ['Draft'], date: "2024-05-18", feedback: "Amalga oshirish qiymati qimmat. Qayta ishlanishi kerak." },
+  { id: 3, orgId: 'ORG-SCH-012', targetOrgId: 'ORG-ITP-001', title: "EcoDrone - Yong'inni aniqlash", author: "Sardor Rustamov", phone: "+998 (93) 321-76-54", email: "sardor.r@inbox.uz", school: "Prezident maktabi", status: "Ko'rilmoqda", aiScore: 78, badges: ['Verified'], date: "2024-06-02", feedback: "" }
 ];
 
 const mockTeam = [
@@ -2030,7 +2030,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
   const [step, setStep] = useState(1);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [aiResult, setAiResult] = useState(null);
-  const [formData, setFormData] = useState({ title: '', problem: '', solution: '', category: 'IT', targetOrgId: '', authorName: '', phone: '', school: '' });
+  const [formData, setFormData] = useState({ title: '', problem: '', solution: '', category: 'IT', targetOrgId: '', authorName: '', phone: '', email: '', school: '' });
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [voucherCode, setVoucherCode] = useState('');
   const [organizations, setOrganizations] = useState(defaultOrganizations);
@@ -2038,7 +2038,8 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
   useEffect(() => {
     if (currentUser?.name && !formData.authorName) setFormData(prev => ({ ...prev, authorName: currentUser.name }));
     if (currentUser?.orgName && !formData.school) setFormData(prev => ({ ...prev, school: currentUser.orgName || '' }));
-  }, [currentUser?.name, currentUser?.orgName]);
+    if (currentUser?.email && !formData.email) setFormData(prev => ({ ...prev, email: currentUser.email || '' }));
+  }, [currentUser?.name, currentUser?.orgName, currentUser?.email]);
 
   const validateProjectFile = (file) => {
     const name = (file.name || '').toLowerCase();
@@ -2147,6 +2148,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
     }
     const authorName = (formData.authorName || currentUser.name || '').trim();
     const phone = (formData.phone || '').trim();
+    const email = (formData.email || currentUser.email || '').trim();
     const school = (formData.school || currentUser.orgName || '').trim();
     const newProject = { 
       id: Date.now(), 
@@ -2157,9 +2159,10 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
       solution: formData.solution,
       author: authorName, 
       phone: phone, 
+      email: email,
       school: school, 
       status: "Ko'rilmoqda", 
-aiScore: aiResult?.totalScore ?? 0,
+      aiScore: aiResult?.totalScore ?? 0,
       badges: ['Verified'],
       date: new Date().toISOString().split('T')[0],
       feedback: ""
@@ -2174,6 +2177,7 @@ aiScore: aiResult?.totalScore ?? 0,
         solution: formData.solution,
         author: authorName,
         phone: phone || undefined,
+        email: email || undefined,
         school: school,
         aiScore: aiResult?.totalScore ?? 0,
         badges: ['Verified'],
@@ -2215,7 +2219,7 @@ aiScore: aiResult?.totalScore ?? 0,
             </div>
             <div className="rounded-xl md:rounded-2xl border border-white/10 bg-white/5 p-4 md:p-6 space-y-4 md:space-y-5">
               <h4 className="text-sm md:text-base font-black text-slate-200 uppercase tracking-widest border-b border-white/10 pb-2 md:pb-3">{t.submit.ownerSection}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.submit.ownerName}</label>
                   <input type="text" value={formData.authorName} onChange={e => setFormData({...formData, authorName: e.target.value})} placeholder={currentUser?.name || "Masalan: Aziz Rahimov"} className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 md:p-4 text-white focus:border-blue-500 focus:outline-none text-sm md:text-base placeholder:text-slate-500" />
@@ -2223,6 +2227,10 @@ aiScore: aiResult?.totalScore ?? 0,
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.submit.ownerPhone}</label>
                   <input type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+998 90 123 45 67" className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 md:p-4 text-white focus:border-blue-500 focus:outline-none text-sm md:text-base placeholder:text-slate-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.submit.ownerEmail}</label>
+                  <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder={currentUser?.email || "example@mail.com"} className="w-full bg-black/40 border border-white/10 rounded-xl p-3.5 md:p-4 text-white focus:border-blue-500 focus:outline-none text-sm md:text-base placeholder:text-slate-500" />
                 </div>
                 <div>
                   <label className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">{t.submit.ownerSchool}</label>
@@ -2480,17 +2488,26 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
                   <h4 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest mb-3 md:mb-4">{t.modal.contactAuthor}</h4>
                   {isContactVisible ? (
                     <div className="space-y-3 md:space-y-4">
-                      <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200">
-                        <div className="p-2 bg-white/10 rounded-lg"><Phone className="w-4 h-4 text-emerald-400"/></div>
+                      <a href={`tel:${project.phone?.replace(/[\s()-]/g, '')}`} className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200 hover:text-emerald-400 transition-colors cursor-pointer">
+                        <div className="p-2 bg-emerald-500/20 rounded-lg"><Phone className="w-4 h-4 text-emerald-400"/></div>
                         {project.phone || <span className="text-slate-500 italic">Telefon ko'rsatilmagan</span>}
-                      </div>
+                      </a>
+                      {project.email && (
+                        <a href={`mailto:${project.email}`} className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200 hover:text-blue-400 transition-colors cursor-pointer">
+                          <div className="p-2 bg-blue-500/20 rounded-lg"><Mail className="w-4 h-4 text-blue-400"/></div>
+                          {project.email}
+                        </a>
+                      )}
                       {project.school && (
                         <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200">
-                          <div className="p-2 bg-white/10 rounded-lg"><MapPin className="w-4 h-4 text-amber-400"/></div>
+                          <div className="p-2 bg-amber-500/20 rounded-lg"><MapPin className="w-4 h-4 text-amber-400"/></div>
                           {project.school}
                         </div>
                       )}
-                      <button className="w-full mt-2 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs md:text-sm font-black transition-colors">{t.modal.writeMsg}</button>
+                      <a href={`mailto:${project.email || ''}?subject=${encodeURIComponent('NEXUS: ' + project.title)}`} className="w-full mt-2 py-3 bg-gradient-to-r from-blue-600 to-fuchsia-600 hover:from-blue-500 hover:to-fuchsia-500 text-white rounded-xl text-xs md:text-sm font-black transition-all flex items-center justify-center gap-2">
+                        <MessageSquare className="w-4 h-4" />
+                        {t.modal.writeMsg}
+                      </a>
                     </div>
                   ) : (
                     <div className="bg-black/40 border border-white/5 p-4 rounded-xl text-center">
