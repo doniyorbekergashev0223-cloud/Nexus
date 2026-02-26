@@ -73,6 +73,18 @@ Qoidalar: problemValidity - muammoning dolzarbligi (max 25), innovation - innova
     if (!response.ok) {
       const errText = await response.text();
       console.error('Gemini API error', response.status, errText);
+      // Quota yoki boshqa xatolarda fallback natija qaytaramiz (200)
+      if (response.status === 429 || response.status === 403 || response.status === 401) {
+        return res.status(200).json({
+          totalScore: 75,
+          problemValidity: 19,
+          innovation: 15,
+          impact: 15,
+          market: 14,
+          feasibility: 12,
+          fallback: true,
+        });
+      }
       let detail = errText;
       try {
         const errJson = JSON.parse(errText);

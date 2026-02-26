@@ -22,7 +22,7 @@ const translations = {
     nav: { about: "Loyiha haqida", contact: "Bog'lanish", gov: "Davlat KPI", orgLogin: "Tashkilot Kirish", studentLogin: "Maktab Paneli", login: "Kirish", dashboard: "Boshqaruv paneli", submit: "Loyiha yuborish", projects: "Loyihalar holati", kpi: "KPI va Monitoring", team: "Jamoa va Ekspertlar", settings: "Sozlamalar", logout: "Tizimdan chiqish", payments: "Hisob va To'lovlar" },
     hero: { badge: "AI Premium Tahlil V2", title1: "Iste'dodlar hamma joyda,", title2: "imkoniyatlar ham shunday bo'lishi kerak.", desc: "Rivojlanayotgan hududlardagi iqtidorlar va yirik investorlar o'rtasidagi raqamli ko'prik. G'oyangizni bepul baholang va MVP ga aylantiring.", startFree: "Bepul boshlash", video: "Video qo'llanma" },
     stats: { users: "Foydalanuvchilar", startups: "Startaplar", orgs: "Tashkilotlar", regions: "Hududlar" },
-    dashboard: { title: "Tashkilot Paneli", desc: "Umumiy statistika va AI tahlil xulosalari", totalUsers: "Foydalanuvchilar", received: "Kelib Tushgan", rejected: "Rad Etilgan", approved: "Qabul Qilingan", growth: "Loyihalar dinamikasi", statusDist: "Loyiha holati" },
+    dashboard: { title: "Tashkilot Paneli", titleStudent: "Mening Panelim", desc: "Umumiy statistika va AI tahlil xulosalari", descStudent: "Yuborilgan loyihalaringiz va ularning holati", totalUsers: "Foydalanuvchilar", received: "Kelib Tushgan", sent: "Yuborilgan", rejected: "Rad Etilgan", approved: "Qabul Qilingan", growth: "Loyihalar dinamikasi", statusDist: "Loyiha holati" },
     submit: { title: "Yangi loyiha yaratish", desc: "G'oyangizni kiriting. Bizning AI Premium tizimimiz uni avtomatik baholaydi.", projName: "Loyiha Nomi", problem: "Muammo", solution: "Yechim (MVP)", ip: "IP Himoyalangan", next: "Keyingi qadam", selectOrg: "Loyihani yuborish tashkiloti", attachFile: "Loyiha fayli (ixtiyoriy)", attachHint: "Faqat PDF, PPTX, Word (doc, docx)", ownerSection: "Loyiha egasi ma'lumotlari", ownerName: "To'liq ism (muallif)", ownerPhone: "Telefon raqam", ownerSchool: "Maktab / Tashkilot",
       projNameEx: "Masalan: SmartAgro - Suvni tejash tizimi",
       problemEx: "Masalan: Qishloq xo'jaligida eski usullar sababli suvning 40% ortiqcha isrof bo'lishi va ekinlarning vaqtida sug'orilmasligi.",
@@ -49,7 +49,7 @@ const translations = {
     nav: { about: "О проекте", contact: "Контакты", gov: "Гос. KPI", orgLogin: "Вход для организаций", studentLogin: "Школьная панель", login: "Войти", dashboard: "Панель управления", submit: "Отправить проект", projects: "Статус проектов", kpi: "KPI и Мониторинг", team: "Команда и Эксперты", settings: "Настройки", logout: "Выйти", payments: "Счет и Оплата" },
     hero: { badge: "AI Premium Анализ V2", title1: "Таланты есть везде,", title2: "возможности тоже должны быть такими.", desc: "Цифровой мост между талантами в развивающихся регионах и крупными инвесторами. Оцените свою идею бесплатно и превратите в MVP.", startFree: "Начать бесплатно", video: "Видеоинструкция" },
     stats: { users: "Пользователи", startups: "Стартапы", orgs: "Организации", regions: "Регионы" },
-    dashboard: { title: "Панель Организации", desc: "Общая статистика и выводы AI анализа", totalUsers: "Пользователи", received: "Поступило", rejected: "Отклонено", approved: "Одобрено", growth: "Динамика проектов", statusDist: "Статус проектов" },
+    dashboard: { title: "Панель Организации", titleStudent: "Моя Панель", desc: "Общая статистика и выводы AI анализа", descStudent: "Ваши отправленные проекты и их статус", totalUsers: "Пользователи", received: "Поступило", sent: "Отправлено", rejected: "Отклонено", approved: "Одобрено", growth: "Динамика проектов", statusDist: "Статус проектов" },
     submit: { title: "Создать новый проект", desc: "Введите вашу идею. Наша система AI Premium автоматически оценит ее.", projName: "Название проекта", problem: "Проблема", solution: "Решение (MVP)", ip: "IP Защищено", next: "Следующий шаг", selectOrg: "Организация для отправки", attachFile: "Файл проекта (необязательно)", attachHint: "Только PDF, PPTX, Word (doc, docx)", ownerSection: "Данные владельца проекта", ownerName: "Полное имя (автор)", ownerPhone: "Номер телефона", ownerSchool: "Школа / Организация",
       projNameEx: "Например: SmartAgro - Система экономии воды",
       problemEx: "Например: 40% воды тратится впустую в сельском хозяйстве из-за устаревших методов полива...",
@@ -76,7 +76,7 @@ const translations = {
     nav: { about: "About Project", contact: "Contact", gov: "Gov KPI", orgLogin: "Org Login", studentLogin: "School Panel", login: "Login", dashboard: "Dashboard", submit: "Submit Project", projects: "Project Status", kpi: "KPI & Monitoring", team: "Team & Experts", settings: "Settings", logout: "Log out", payments: "Billing & Payments" },
     hero: { badge: "AI Premium Analysis V2", title1: "Talent is everywhere,", title2: "opportunities should be too.", desc: "A digital bridge between talents in developing regions and major investors. Evaluate your idea for free and turn it into an MVP.", startFree: "Start for free", video: "Video Tutorial" },
     stats: { users: "Users", startups: "Startups", orgs: "Organizations", regions: "Regions" },
-    dashboard: { title: "Organization Panel", desc: "General statistics and AI analysis insights", totalUsers: "Total Users", received: "Received", rejected: "Rejected", approved: "Approved", growth: "Project Dynamics", statusDist: "Project Status" },
+    dashboard: { title: "Organization Panel", titleStudent: "My Dashboard", desc: "General statistics and AI analysis insights", descStudent: "Your submitted projects and their status", totalUsers: "Total Users", received: "Received", sent: "Sent", rejected: "Rejected", approved: "Approved", growth: "Project Dynamics", statusDist: "Project Status" },
     submit: { title: "Create New Project", desc: "Enter your idea. Our AI Premium system will automatically evaluate it.", projName: "Project Name", problem: "Problem", solution: "Solution (MVP)", ip: "IP Protected", next: "Next Step", selectOrg: "Send project to organization", attachFile: "Project file (optional)", attachHint: "Only PDF, PPTX, Word (doc, docx)", ownerSection: "Project owner details", ownerName: "Full name (author)", ownerPhone: "Phone number", ownerSchool: "School / Organization",
       projNameEx: "Example: SmartAgro - Water saving system",
       problemEx: "Example: 40% of water is wasted in agriculture due to outdated irrigation methods...",
@@ -1421,7 +1421,7 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 relative scroll-smooth custom-scrollbar">
-          {activeTab === 'dashboard' && <Dashboard projects={projects} />}
+          {activeTab === 'dashboard' && <Dashboard projects={projects} currentUser={currentUser} />}
           {activeTab === 'kpi' && <KPIDashboard projects={projects} />}
           {activeTab === 'team' && <TeamList currentUser={currentUser} showToast={showToast} />}
           {activeTab === 'payments' && <PaymentsDashboard currentUser={currentUser} showToast={showToast} />}
@@ -1443,8 +1443,9 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
   );
 }
 
-function Dashboard({ projects = [] }) {
+function Dashboard({ projects = [], currentUser }) {
   const { t } = useContext(LanguageContext);
+  const isStudent = currentUser?.role === 'student';
   const stats = React.useMemo(() => {
     const total = projects.length;
     const approved = projects.filter(p => p.status === 'Qabul qilindi').length;
@@ -1474,13 +1475,13 @@ function Dashboard({ projects = [] }) {
   return (
     <div className="max-w-7xl mx-auto pb-10">
       <div className="slide-up mb-6 md:mb-10">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 md:mb-3 tracking-tighter drop-shadow-md">{t.dashboard.title}</h1>
-        <p className="text-slate-400 text-sm md:text-lg font-medium">{t.dashboard.desc}</p>
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 md:mb-3 tracking-tighter drop-shadow-md">{isStudent ? t.dashboard.titleStudent : t.dashboard.title}</h1>
+        <p className="text-slate-400 text-sm md:text-lg font-medium">{isStudent ? t.dashboard.descStudent : t.dashboard.desc}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-14">
         <DashCard title={t.dashboard.totalUsers} value={String(stats.uniqueAuthors)} icon={Users} color="blue" delay="100" />
-        <DashCard title={t.dashboard.received} value={String(stats.total)} icon={Folder} color="fuchsia" delay="200" />
+        <DashCard title={isStudent ? t.dashboard.sent : t.dashboard.received} value={String(stats.total)} icon={Folder} color="fuchsia" delay="200" />
         <DashCard title={t.dashboard.rejected} value={String(stats.rejected)} icon={AlertTriangle} color="red" delay="300" />
         <DashCard title={t.dashboard.approved} value={String(stats.approved)} icon={CheckCircle} color="emerald" delay="400" />
       </div>
@@ -2155,7 +2156,7 @@ function ProjectSubmission({ currentUser, setProjects, setActiveTab, setNotifica
       problem: formData.problem,
       solution: formData.solution,
       author: authorName, 
-      phone: phone || "+998 (90) ***-**-**", 
+      phone: phone, 
       school: school, 
       status: "Ko'rilmoqda", 
 aiScore: aiResult?.totalScore ?? 0,
@@ -2479,8 +2480,16 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
                   <h4 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest mb-3 md:mb-4">{t.modal.contactAuthor}</h4>
                   {isContactVisible ? (
                     <div className="space-y-3 md:space-y-4">
-                      <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200"><div className="p-2 bg-white/10 rounded-lg"><Phone className="w-4 h-4 text-emerald-400"/></div>{project.phone || "+998 (90) 123-45-67"}</div>
-                      <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200"><div className="p-2 bg-white/10 rounded-lg"><Mail className="w-4 h-4 text-blue-400"/></div>{project.author.toLowerCase().replace(' ', '')}@gmail.com</div>
+                      <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200">
+                        <div className="p-2 bg-white/10 rounded-lg"><Phone className="w-4 h-4 text-emerald-400"/></div>
+                        {project.phone || <span className="text-slate-500 italic">Telefon ko'rsatilmagan</span>}
+                      </div>
+                      {project.school && (
+                        <div className="flex items-center gap-3 text-xs md:text-sm font-bold text-slate-200">
+                          <div className="p-2 bg-white/10 rounded-lg"><MapPin className="w-4 h-4 text-amber-400"/></div>
+                          {project.school}
+                        </div>
+                      )}
                       <button className="w-full mt-2 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs md:text-sm font-black transition-colors">{t.modal.writeMsg}</button>
                     </div>
                   ) : (
