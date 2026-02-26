@@ -7,8 +7,7 @@ import {
   Briefcase, MessageSquare, Globe,
   FileText, Lock, X, QrCode, Ticket, Phone, Mail, Play,
   Menu, Settings, Loader, CreditCard, LogIn, UserPlus, Server,
-  Target, Rocket, Lightbulb, GraduationCap, BookOpen, Landmark,
-  Sun, Moon
+  Target, Rocket, Lightbulb, GraduationCap, BookOpen, Landmark
 } from 'lucide-react';
 import { 
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
@@ -161,26 +160,7 @@ const CustomStyles = () => (
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
     }
     
-    /* Light mode premium glass */
-    .light .premium-glass {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%);
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
-    }
-    
-    /* Light mode ambient orbs */
-    .light .animate-orb-1, .light .animate-orb-2, .light .animate-orb-3 {
-      mix-blend-mode: multiply;
-      opacity: 0.15 !important;
-    }
-    
-    /* Light mode scrollbar */
-    .light ::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); }
-    .light ::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.25); }
-    .light select option { background: #f8fafc; color: #1e293b; }
-    
     .premium-gradient-text { background: linear-gradient(135deg, #fff 0%, #3b82f6 40%, #d946ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 2px 15px rgba(217, 70, 239, 0.3)); }
-    .light .premium-gradient-text { background: linear-gradient(135deg, #1e293b 0%, #3b82f6 40%, #d946ef 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     
     .btn-premium { position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     .btn-premium::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 3s infinite; transform: skewX(-25deg); }
@@ -433,12 +413,10 @@ function CardPaymentForm({ amountLabel, onSuccess, t, showToast }) {
 
 // Layout Components properly defined BEFORE usage to avoid reference errors
 function NavItem({ icon: IconComp, label, active, onClick }) {
-  const { theme } = useContext(LanguageContext);
-  const isLight = theme === 'light';
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-4 px-4 sm:px-5 py-3.5 sm:py-4 rounded-[1rem] sm:rounded-[1.2rem] transition-all font-bold text-sm group ${active ? (isLight ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-gradient-to-r from-blue-500/20 to-transparent text-white border border-blue-500/30 shadow-inner') : (isLight ? 'text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-transparent' : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent')}`}>
-      {active && <div className={`absolute left-0 top-0 bottom-0 w-1.5 shadow-[0_0_15px_rgba(59,130,246,1)] ${isLight ? 'bg-blue-500' : 'bg-blue-400'}`}></div>}
-      <div className={`${active ? 'scale-110 text-blue-500' : (isLight ? 'group-hover:scale-110 group-hover:text-slate-700' : 'group-hover:scale-110 group-hover:text-slate-200')}`}>
+    <button onClick={onClick} className={`w-full flex items-center gap-4 px-4 sm:px-5 py-3.5 sm:py-4 rounded-[1rem] sm:rounded-[1.2rem] transition-all font-bold text-sm group ${active ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-white border border-blue-500/30 shadow-inner' : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+      {active && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-400 shadow-[0_0_15px_rgba(59,130,246,1)]"></div>}
+      <div className={`${active ? 'scale-110 text-blue-400' : 'group-hover:scale-110 group-hover:text-slate-200'}`}>
          <IconComp className="w-5 h-5" />
       </div>
       <span className="tracking-wide">{label}</span>
@@ -519,29 +497,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null); 
   const [projects, setProjects] = useState([]);
   const [notifications, setNotifications] = useState([]);
-
-  // Theme state with localStorage persistence
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('nexus-theme') || 'dark';
-    }
-    return 'dark';
-  });
-
-  // Theme effect - sync with DOM and localStorage
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-    localStorage.setItem('nexus-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   useEffect(() => {
     const onHash = () => setShowResetPassword(typeof window !== 'undefined' && window.location.hash.includes('reset-password'));
@@ -660,15 +615,15 @@ export default function App() {
   });
 
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t: translations[lang], theme, toggleTheme }}>
+    <LanguageContext.Provider value={{ lang, setLang, t: translations[lang] }}>
       <CustomStyles />
-      <div className={`min-h-screen font-sans selection:bg-fuchsia-500/30 overflow-hidden relative flex flex-col transition-colors duration-500 ${theme === 'light' ? 'bg-slate-50 text-slate-800' : 'bg-[#05050A] text-slate-200'}`}>
+      <div className="min-h-screen bg-[#05050A] text-slate-200 font-sans selection:bg-fuchsia-500/30 overflow-hidden relative flex flex-col">
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          <div className={`absolute inset-0 bg-grid-texture ${theme === 'light' ? 'opacity-5' : 'opacity-20'}`}></div>
-          <div className={`absolute top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full blur-[150px] animate-orb-1 ${theme === 'light' ? 'bg-blue-400/20 mix-blend-multiply' : 'bg-blue-600/10 mix-blend-screen'}`}></div>
-          <div className={`absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[160px] animate-orb-2 ${theme === 'light' ? 'bg-fuchsia-400/15 mix-blend-multiply' : 'bg-fuchsia-600/10 mix-blend-screen'}`}></div>
+          <div className="absolute inset-0 bg-grid-texture opacity-20"></div>
+          <div className="absolute top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-blue-600/10 blur-[150px] animate-orb-1 mix-blend-screen"></div>
+          <div className="absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-fuchsia-600/10 blur-[160px] animate-orb-2 mix-blend-screen"></div>
         </div>
 
         <div className="relative z-10 h-full flex flex-col flex-1">
@@ -845,7 +800,7 @@ function ResetPasswordPage({ showToast, onDone }) {
 
 // --- LANDING PAGE ---
 function LandingPage({ onLoginSuccess, showToast }) {
-  const { lang, setLang, t, theme, toggleTheme } = useContext(LanguageContext);
+  const { lang, setLang, t } = useContext(LanguageContext);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [authModal, setAuthModal] = useState({ isOpen: false });
   const [authMode, setAuthMode] = useState('login'); 
@@ -1018,38 +973,31 @@ function LandingPage({ onLoginSuccess, showToast }) {
 
   return (
     <div className="flex flex-col flex-1 overflow-y-auto relative min-h-screen custom-scrollbar scroll-smooth">
-      <nav className={`flex justify-between items-center px-4 md:px-8 lg:px-12 py-4 md:py-5 border-b premium-glass sticky top-0 z-50 mx-2 md:mx-4 mt-2 md:mt-4 rounded-2xl md:rounded-3xl shadow-2xl transition-colors duration-500 ${theme === 'light' ? 'border-slate-200' : 'border-white/5'}`}>
+      <nav className="flex justify-between items-center px-4 md:px-8 lg:px-12 py-4 md:py-5 border-b border-white/5 premium-glass sticky top-0 z-50 mx-2 md:mx-4 mt-2 md:mt-4 rounded-2xl md:rounded-3xl shadow-2xl">
         <div className="flex items-center gap-3 md:gap-4 hover:scale-105 transition-transform cursor-pointer group">
           <NexusLogo />
-          <span className={`text-2xl md:text-3xl font-black tracking-tighter drop-shadow-md ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>
+          <span className="text-2xl md:text-3xl font-black tracking-tighter text-white drop-shadow-md">
             NEXUS<span className="text-blue-500">.</span>
           </span>
         </div>
         <div className="hidden lg:flex items-center gap-6">
-          {/* Theme Toggle */}
-          <button onClick={toggleTheme} className={`p-2.5 rounded-xl border transition-all duration-300 ${theme === 'light' ? 'bg-slate-100 border-slate-200 text-amber-500 hover:bg-slate-200' : 'bg-black/40 border-white/10 text-slate-400 hover:text-white'}`}>
-            {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <div className={`flex rounded-lg p-1 mr-2 border ${theme === 'light' ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-white/5'}`}>
+          <div className="flex bg-black/40 rounded-lg p-1 mr-2 border border-white/5">
             {['uz', 'ru', 'en'].map(l => (
-              <button key={l} onClick={() => setLang(l)} className={`px-3 py-1 text-xs font-bold uppercase rounded-md transition-all ${lang === l ? 'bg-blue-500 text-white' : theme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}>{l}</button>
+              <button key={l} onClick={() => setLang(l)} className={`px-3 py-1 text-xs font-bold uppercase rounded-md transition-all ${lang === l ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}>{l}</button>
             ))}
           </div>
-          <a href="#about" className={`text-sm font-bold transition-colors ${theme === 'light' ? 'text-slate-600 hover:text-blue-600' : 'text-slate-300 hover:text-blue-400'}`}>{t.nav.about}</a>
-          <a href="#contact" className={`text-sm font-bold transition-colors ${theme === 'light' ? 'text-slate-600 hover:text-blue-600' : 'text-slate-300 hover:text-blue-400'}`}>{t.nav.contact}</a>
-          <div className={`w-px h-4 mx-2 ${theme === 'light' ? 'bg-slate-300' : 'bg-white/10'}`}></div>
-          <button onClick={() => handleAuthModalOpen('gov', 'login')} className={`text-sm font-bold transition-colors items-center gap-2 flex ${theme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}>
+          <a href="#about" className="text-sm font-bold text-slate-300 hover:text-blue-400 transition-colors">{t.nav.about}</a>
+          <a href="#contact" className="text-sm font-bold text-slate-300 hover:text-blue-400 transition-colors">{t.nav.contact}</a>
+          <div className="w-px h-4 bg-white/10 mx-2"></div>
+          <button onClick={() => handleAuthModalOpen('gov', 'login')} className="text-sm font-bold text-slate-400 hover:text-white transition-colors items-center gap-2 flex">
             <Globe className="w-4 h-4" /> {t.nav.gov}
           </button>
-          <button onClick={() => handleAuthModalOpen('organization', 'login')} className={`btn-premium px-8 py-3 rounded-xl font-black text-sm transition-all hover:scale-105 ${theme === 'light' ? 'bg-gradient-to-r from-blue-600 to-fuchsia-600 text-white shadow-lg' : 'bg-white text-[#05050A] shadow-[0_0_20px_rgba(255,255,255,0.1)]'}`}>
+          <button onClick={() => handleAuthModalOpen('organization', 'login')} className="btn-premium px-8 py-3 bg-white text-[#05050A] rounded-xl font-black text-sm transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
             {t.nav.orgLogin}
           </button>
         </div>
         <div className="lg:hidden flex gap-2 items-center">
-          <button onClick={toggleTheme} className={`p-2 rounded-lg border transition-all ${theme === 'light' ? 'bg-slate-100 border-slate-200 text-amber-500' : 'bg-black/40 border-white/10 text-slate-400'}`}>
-            {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <button onClick={() => setLang(lang === 'uz' ? 'ru' : lang === 'ru' ? 'en' : 'uz')} className={`text-xs font-bold uppercase p-2 border rounded-lg ${theme === 'light' ? 'border-slate-200 text-slate-700' : 'border-white/10 text-white'}`}>{lang}</button>
+          <button onClick={() => setLang(lang === 'uz' ? 'ru' : lang === 'ru' ? 'en' : 'uz')} className="text-xs font-bold uppercase p-2 border border-white/10 rounded-lg text-white">{lang}</button>
           <button onClick={() => handleAuthModalOpen('student', 'login')} className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-fuchsia-500 text-white font-bold rounded-xl text-sm shadow-lg">
             {t.nav.login}
           </button>
@@ -1058,12 +1006,12 @@ function LandingPage({ onLoginSuccess, showToast }) {
 
       <main className="flex-1 flex flex-col w-full relative z-20 min-h-0 overflow-visible">
         <div className="w-full flex flex-col items-center justify-center text-center px-4 pt-16 md:pt-32 pb-16">
-          <div className={`slide-up delay-100 inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-2.5 rounded-full premium-glass mb-6 md:mb-10 shadow-[0_0_30px_rgba(59,130,246,0.15)] ${theme === 'light' ? 'border border-blue-200' : 'border-blue-500/30'}`}>
-            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-blue-500 animate-[pulseSoft_2s_infinite]" />
-            <span className={`text-xs md:text-sm font-black tracking-widest uppercase ${theme === 'light' ? 'text-blue-600' : 'text-blue-100'}`}>{t.hero.badge}</span>
+          <div className="slide-up delay-100 inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-2.5 rounded-full premium-glass border-blue-500/30 mb-6 md:mb-10 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
+            <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-blue-400 animate-[pulseSoft_2s_infinite]" />
+            <span className="text-xs md:text-sm font-black tracking-widest uppercase text-blue-100">{t.hero.badge}</span>
           </div>
           
-          <h1 className={`slide-up delay-200 text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[6.5rem] font-black mb-6 md:mb-8 leading-tight max-w-6xl tracking-tighter ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>
+          <h1 className="slide-up delay-200 text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[6.5rem] font-black text-white mb-6 md:mb-8 leading-tight max-w-6xl tracking-tighter">
             {t.hero.title1} <br className="hidden md:block"/>
             <span className="premium-gradient-text relative inline-block mt-2 md:mt-4 pb-2 pt-1">
               {t.hero.title2}
@@ -1071,7 +1019,7 @@ function LandingPage({ onLoginSuccess, showToast }) {
             </span>
           </h1>
           
-          <p className={`slide-up delay-300 text-sm md:text-xl lg:text-2xl max-w-3xl mb-10 md:mb-14 leading-relaxed font-medium px-2 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+          <p className="slide-up delay-300 text-sm md:text-xl lg:text-2xl text-slate-400 max-w-3xl mb-10 md:mb-14 leading-relaxed font-medium px-2">
             {t.hero.desc}
           </p>
           
@@ -1321,7 +1269,7 @@ function LandingPage({ onLoginSuccess, showToast }) {
 }
 
 function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, projects, setProjects, notifications, setNotifications, updateProjectStatus, showToast, refreshUser }) {
-  const { lang, setLang, t, theme, toggleTheme } = useContext(LanguageContext);
+  const { lang, setLang, t } = useContext(LanguageContext);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [viewProject, setViewProject] = useState(null);
@@ -1345,20 +1293,20 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
   );
 
   return (
-    <div className={`flex h-screen w-full p-0 md:p-4 gap-4 flex-1 overflow-hidden transition-colors duration-500 ${theme === 'light' ? 'bg-slate-100' : 'bg-[#05050A]'}`}>
-      <aside className={`w-[280px] premium-glass flex-col hidden lg:flex relative z-20 rounded-[2rem] overflow-hidden shadow-2xl flex-shrink-0 transition-colors duration-500 ${theme === 'light' ? 'border-slate-200' : 'border-white/5'}`}>
-        <div className={`absolute top-0 left-0 w-full h-40 pointer-events-none ${theme === 'light' ? 'bg-gradient-to-b from-blue-100/50 to-transparent' : 'bg-gradient-to-b from-blue-500/10 to-transparent'}`}></div>
+    <div className="flex h-screen w-full p-0 md:p-4 gap-4 flex-1 bg-[#05050A] overflow-hidden">
+      <aside className="w-[280px] premium-glass flex-col hidden lg:flex relative z-20 rounded-[2rem] overflow-hidden shadow-2xl flex-shrink-0 border-white/5">
+        <div className="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-blue-500/10 to-transparent pointer-events-none"></div>
         <div className="p-6 relative z-10 flex-1 flex flex-col">
           <div className="flex items-center gap-3 mb-10 mt-2 cursor-pointer group" onClick={() => handleNavClick('dashboard')}>
             <NexusLogo />
-            <span className={`text-3xl font-black tracking-tighter ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>NEXUS</span>
+            <span className="text-3xl font-black text-white tracking-tighter">NEXUS</span>
           </div>
-          <button onClick={() => handleNavClick(currentUser.role === 'student' ? 'submit' : 'projects')} className={`w-full btn-premium p-4 rounded-2xl font-black text-sm transition-all hover:scale-[1.03] flex items-center justify-center gap-2 mb-8 ${theme === 'light' ? 'bg-gradient-to-r from-blue-600 to-fuchsia-600 text-white shadow-lg' : 'bg-white text-slate-900 hover:bg-slate-100 shadow-[0_10px_30px_rgba(255,255,255,0.1)]'}`}>
+          <button onClick={() => handleNavClick(currentUser.role === 'student' ? 'submit' : 'projects')} className="w-full btn-premium bg-white text-slate-900 hover:bg-slate-100 p-4 rounded-2xl font-black text-sm shadow-[0_10px_30px_rgba(255,255,255,0.1)] transition-all hover:scale-[1.03] flex items-center justify-center gap-2 mb-8">
             <Send className="w-5 h-5" /> {currentUser.role === 'student' ? t.nav.submit : t.nav.projects}
           </button>
           <nav className="space-y-2.5 flex-1 overflow-y-auto custom-scrollbar pr-2"><NavigationLinks /></nav>
-          <div className={`mt-4 pt-6 border-t relative z-10 ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
-             <button onClick={logout} className={`w-full flex items-center gap-4 transition-colors px-4 py-4 rounded-2xl group ${theme === 'light' ? 'text-slate-500 hover:text-red-500 hover:bg-red-50' : 'text-slate-400 hover:text-red-400 hover:bg-red-500/10'}`}>
+          <div className="mt-4 pt-6 border-t border-white/10 relative z-10">
+             <button onClick={logout} className="w-full flex items-center gap-4 text-slate-400 hover:text-red-400 transition-colors px-4 py-4 rounded-2xl hover:bg-red-500/10 group">
                <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                <span className="font-bold">{t.nav.logout}</span>
              </button>
@@ -1368,24 +1316,24 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[200] lg:hidden flex">
-          <div className={`absolute inset-0 backdrop-blur-sm ${theme === 'light' ? 'bg-black/40' : 'bg-black/80'}`} onClick={() => setIsMobileMenuOpen(false)}></div>
-          <div className={`w-[280px] h-full premium-glass border-r relative z-10 flex flex-col p-6 slide-in-right ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`}>
-            <button onClick={() => setIsMobileMenuOpen(false)} className={`absolute top-6 right-6 ${theme === 'light' ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-white'}`}><X className="w-6 h-6"/></button>
-            <div className="flex items-center gap-3 mb-8 mt-2"><NexusLogo /><span className={`text-2xl font-black ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>NEXUS</span></div>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
+          <div className="w-[280px] h-full premium-glass border-r border-white/10 relative z-10 flex flex-col p-6 slide-in-right">
+            <button onClick={() => setIsMobileMenuOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white"><X className="w-6 h-6"/></button>
+            <div className="flex items-center gap-3 mb-8 mt-2"><NexusLogo /><span className="text-2xl font-black text-white">NEXUS</span></div>
             <nav className="space-y-3 flex-1 overflow-y-auto custom-scrollbar"><NavigationLinks /></nav>
-            <button onClick={logout} className={`w-full flex items-center gap-3 px-4 py-4 rounded-xl font-bold mt-4 ${theme === 'light' ? 'text-red-500 bg-red-50' : 'text-red-400 bg-red-500/10'}`}><LogOut className="w-5 h-5" /> {t.nav.logout}</button>
+            <button onClick={logout} className="w-full flex items-center gap-3 text-red-400 px-4 py-4 rounded-xl bg-red-500/10 font-bold mt-4"><LogOut className="w-5 h-5" /> {t.nav.logout}</button>
           </div>
         </div>
       )}
 
-      <main className={`flex-1 flex flex-col h-full overflow-hidden relative z-10 md:premium-glass md:rounded-[2rem] shadow-2xl transition-colors duration-500 ${theme === 'light' ? 'border-slate-200' : 'border-white/5'}`}>
-        <div className={`w-full text-[10px] md:text-xs font-bold uppercase tracking-widest text-center py-1.5 flex justify-center items-center gap-2 border-b ${theme === 'light' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-blue-900/20 text-blue-200 border-blue-500/20'}`}>
-          <Server className="w-3 h-3 md:w-4 md:h-4 text-fuchsia-500" />
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10 md:premium-glass md:rounded-[2rem] shadow-2xl border-white/5">
+        <div className="w-full bg-blue-900/20 text-blue-200 text-[10px] md:text-xs font-bold uppercase tracking-widest text-center py-1.5 flex justify-center items-center gap-2 border-b border-blue-500/20">
+          <Server className="w-3 h-3 md:w-4 md:h-4 text-fuchsia-400" />
           <span>Tashkilot Izolyatsiyasi Faol | {currentUser.orgId}</span>
-          <Lock className="w-3 h-3 md:w-4 md:h-4 ml-2 text-emerald-500" />
+          <Lock className="w-3 h-3 md:w-4 md:h-4 ml-2 text-emerald-400" />
         </div>
 
-        <header className={`h-16 md:h-24 border-b flex items-center justify-between px-4 md:px-10 sticky top-0 z-30 backdrop-blur-xl transition-colors duration-500 ${theme === 'light' ? 'border-slate-200 bg-white/80' : 'border-white/5 bg-white/[0.01]'}`}>
+        <header className="h-16 md:h-24 border-b border-white/5 flex items-center justify-between px-4 md:px-10 sticky top-0 z-30 bg-white/[0.01] backdrop-blur-xl">
           <div className="flex items-center gap-3">
              <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-slate-300 hover:text-white"><Menu className="w-6 h-6"/></button>
              
@@ -1419,60 +1367,53 @@ function ApplicationLayout({ currentUser, logout, activeTab, setActiveTab, proje
           </div>
 
           <div className="flex items-center gap-3 md:gap-6 relative">
-            {/* Theme Toggle */}
-            <button onClick={toggleTheme} className={`hidden sm:flex p-2.5 rounded-xl border transition-all duration-300 ${theme === 'light' ? 'bg-slate-100 border-slate-200 text-amber-500 hover:bg-slate-200' : 'bg-black/40 border-white/10 text-slate-400 hover:text-white'}`}>
-              {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <div className={`hidden sm:flex rounded-lg p-1 border ${theme === 'light' ? 'bg-slate-100 border-slate-200' : 'bg-black/40 border-white/5'}`}>
+            <div className="hidden sm:flex bg-black/40 rounded-lg p-1 border border-white/5">
               {['uz', 'ru', 'en'].map(l => (
-                <button key={l} onClick={() => setLang(l)} className={`px-2 py-1 text-[10px] md:text-xs font-bold uppercase rounded-md transition-all ${lang === l ? 'bg-blue-500 text-white' : theme === 'light' ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white'}`}>{l}</button>
+                <button key={l} onClick={() => setLang(l)} className={`px-2 py-1 text-[10px] md:text-xs font-bold uppercase rounded-md transition-all ${lang === l ? 'bg-blue-500 text-white' : 'text-slate-400 hover:text-white'}`}>{l}</button>
               ))}
             </div>
-            <button onClick={toggleTheme} className={`sm:hidden p-2 rounded-lg border transition-all ${theme === 'light' ? 'bg-slate-100 border-slate-200 text-amber-500' : 'bg-black/40 border-white/10 text-slate-400'}`}>
-              {theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <button onClick={() => setLang(lang === 'uz' ? 'ru' : lang === 'ru' ? 'en' : 'uz')} className={`sm:hidden text-[10px] font-bold uppercase p-2 border rounded-lg transition-colors ${theme === 'light' ? 'border-slate-200 text-slate-600' : 'border-white/10 text-slate-300 hover:text-white'}`}>
+            <button onClick={() => setLang(lang === 'uz' ? 'ru' : lang === 'ru' ? 'en' : 'uz')} className="sm:hidden text-[10px] font-bold uppercase p-2 border border-white/10 rounded-lg text-slate-300 hover:text-white transition-colors">
               {lang}
             </button>
 
-            <button onClick={() => { setShowNotifications(!showNotifications); if(!showNotifications) markAllRead(); }} className={`relative p-2.5 md:p-3 transition-all rounded-xl border shadow-inner ${theme === 'light' ? 'text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 border-slate-200' : 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border-white/10'}`}>
+            <button onClick={() => { setShowNotifications(!showNotifications); if(!showNotifications) markAllRead(); }} className="relative p-2.5 md:p-3 text-slate-300 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 shadow-inner">
               <Bell className="w-5 h-5" />
-              {unreadCount > 0 && <span className={`absolute -top-1 -right-1 w-4 h-4 bg-fuchsia-500 rounded-full border-2 animate-pulse flex items-center justify-center text-[8px] font-bold text-white ${theme === 'light' ? 'border-white' : 'border-[#05050A]'}`}>{unreadCount}</span>}
+              {unreadCount > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-fuchsia-500 rounded-full border-2 border-[#05050A] animate-pulse flex items-center justify-center text-[8px] font-bold text-white">{unreadCount}</span>}
             </button>
 
             {showNotifications && (
-              <div className={`absolute top-14 md:top-20 right-0 md:right-8 w-72 md:w-80 premium-glass rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-50 overflow-hidden slide-up ${theme === 'light' ? 'border border-slate-200' : ''}`}>
-                <div className={`p-4 border-b flex justify-between items-center ${theme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-white/5 bg-white/5'}`}>
-                   <h4 className={`font-black text-sm ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>Bildirishnomalar</h4>
-                   <span className="text-[10px] text-cyan-500 font-bold bg-cyan-500/10 px-2 py-1 rounded">Yangi: {unreadCount}</span>
+              <div className="absolute top-14 md:top-20 right-0 md:right-8 w-72 md:w-80 premium-glass rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] z-50 overflow-hidden slide-up">
+                <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                   <h4 className="font-black text-white text-sm">Bildirishnomalar</h4>
+                   <span className="text-[10px] text-cyan-400 font-bold bg-cyan-500/10 px-2 py-1 rounded">Yangi: {unreadCount}</span>
                 </div>
-                <div className={`max-h-80 overflow-y-auto custom-scrollbar ${theme === 'light' ? 'bg-white' : 'bg-[#05050A]/90'}`}>
+                <div className="max-h-80 overflow-y-auto custom-scrollbar bg-[#05050A]/90">
                   {orgNotifications.map(notif => (
-                    <div key={notif.id} className={`p-4 border-b transition-colors cursor-pointer ${theme === 'light' ? 'border-slate-100 hover:bg-slate-50' : 'border-white/5 hover:bg-white/5'} ${notif.unread ? (theme === 'light' ? 'bg-blue-50' : 'bg-blue-500/5') : ''}`}>
+                    <div key={notif.id} className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${notif.unread ? 'bg-blue-500/5' : ''}`}>
                       <div className="flex items-start gap-3">
-                         <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${notif.type === 'success' ? 'bg-emerald-500' : notif.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'}`}></div>
+                         <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${notif.type === 'success' ? 'bg-emerald-400' : notif.type === 'warning' ? 'bg-amber-400' : 'bg-blue-400'}`}></div>
                          <div>
-                            <p className={`text-sm font-medium leading-snug ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>{notif.text}</p>
-                            <p className={`text-[10px] mt-1 font-bold uppercase tracking-wider ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>{notif.time}</p>
+                            <p className="text-sm font-medium text-slate-300 leading-snug">{notif.text}</p>
+                            <p className="text-[10px] text-slate-500 mt-1 font-bold uppercase tracking-wider">{notif.time}</p>
                          </div>
                       </div>
                     </div>
                   ))}
-                  {orgNotifications.length === 0 && <div className={`p-6 text-center text-sm ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>Xabarlar yo'q</div>}
+                  {orgNotifications.length === 0 && <div className="p-6 text-center text-slate-500 text-sm">Xabarlar yo'q</div>}
                 </div>
               </div>
             )}
 
-            <div className={`flex items-center gap-3 md:gap-4 pl-3 md:pl-6 border-l cursor-pointer group ${theme === 'light' ? 'border-slate-200' : 'border-white/10'}`} onClick={() => handleNavClick('settings')}>
+            <div className="flex items-center gap-3 md:gap-4 pl-3 md:pl-6 border-l border-white/10 cursor-pointer group" onClick={() => handleNavClick('settings')}>
               <div className="text-right hidden lg:block">
-                <p className={`text-sm font-black group-hover:text-blue-500 transition-colors ${theme === 'light' ? 'text-slate-800' : 'text-white'}`}>{currentUser.name}</p>
-                <p className={`text-[11px] font-bold mt-0.5 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>{currentUser.role.toUpperCase()}</p>
+                <p className="text-sm font-black text-white group-hover:text-blue-300 transition-colors">{currentUser.name}</p>
+                <p className="text-[11px] text-slate-400 font-bold mt-0.5">{currentUser.role.toUpperCase()}</p>
               </div>
               <div className="w-8 h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-fuchsia-600 p-[2px] shadow-lg group-hover:shadow-fuchsia-500/50 transition-shadow overflow-hidden">
                 {(() => {
                   const u = resolveAvatarDisplay(currentUser.avatarUrl);
                   const src = u?.type === '3d' ? u.url : (u?.type === 'image' ? (ensurePublicStorageUrl(u.url, 'avatars') || u.url) : null);
-                  return src ? <img src={src} alt="" className="w-full h-full rounded-full object-cover" /> : <div className={`w-full h-full rounded-full flex items-center justify-center font-bold text-xs md:text-sm ${theme === 'light' ? 'bg-white text-slate-700' : 'bg-[#05050A] text-white'}`}>{currentUser.name.split(' ').map(n=>n[0]).join('')}</div>;
+                  return src ? <img src={src} alt="" className="w-full h-full rounded-full object-cover" /> : <div className="w-full h-full rounded-full bg-[#05050A] flex items-center justify-center text-white font-bold text-xs md:text-sm">{currentUser.name.split(' ').map(n=>n[0]).join('')}</div>;
                 })()}
               </div>
             </div>
