@@ -7,7 +7,7 @@
  * "Application restrictions" = None qiling (HTTP referrer qo‘ymang), aks holda 403/502.
  */
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 function parseScores(text) {
   const fallback = { totalScore: 70, problemValidity: 18, innovation: 14, impact: 14, market: 12, feasibility: 12 };
