@@ -2398,7 +2398,7 @@ function ProjectModal({ project, onClose, role, updateProjectStatus }) {
   const [ndaSigned, setNdaSigned] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const needsNDA = role === 'organization' || role === 'gov';
-  const isContactVisible = project.status === 'Qabul qilindi';
+  const isContactVisible = ndaSigned || project.status === 'Qabul qilindi' || role === 'student';
 
   return (
     <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300">
